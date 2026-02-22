@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PeakeCoin Trading Bot Download</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(120deg, #0f172a 0%, #0ea5e9 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            position: relative;
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 600px;
+            margin: 60px auto;
+            background: rgba(30,41,59,0.7);
+            border-radius: 22px;
+            box-shadow: 0 12px 48px rgba(14,165,233,0.18), 0 2px 8px rgba(0,0,0,0.12);
+            padding: 48px 36px 36px 36px;
+            text-align: center;
+            backdrop-filter: blur(12px) saturate(1.2);
+            position: relative;
+            z-index: 1;
+        }
+        h1 {
+            font-size: 2.4em;
+            margin-bottom: 0.15em;
+            letter-spacing: 2px;
+            font-weight: 900;
+            background: linear-gradient(90deg, #38bdf8 0%, #fbbf24 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .desc {
+            margin: 2em 0 1.2em 0;
+            font-size: 1.18em;
+            color: #cbd5e1;
+            line-height: 1.7;
+        }
+        .download-card {
+            background: rgba(14,165,233,0.18);
+            border: 1.5px solid #38bdf8;
+            border-radius: 14px;
+            min-width: 220px;
+            padding: 1.2em 1.7em;
+            box-shadow: 0 2px 12px rgba(14,165,233,0.08);
+            margin: 0 auto 1.5em auto;
+            display: inline-block;
+        }
+        .download-card i {
+            font-size: 1.7em;
+            color: #38bdf8;
+            margin-bottom: 0.3em;
+        }
+        .download-card a {
+            color: #fff;
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 1.08em;
+            display: block;
+            margin-bottom: 0.5em;
+            background: linear-gradient(90deg, #0ea5e9 0%, #38bdf8 100%);
+            padding: 0.6em 1em;
+            border-radius: 8px;
+            transition: background 0.18s, color 0.18s;
+        }
+        .download-card a:hover {
+            background: linear-gradient(90deg, #fbbf24 0%, #38bdf8 100%);
+            color: #1e293b;
+        }
+        .instructions {
+            margin-top: 1.2em;
+            font-size: 1em;
+            color: #94a3b8;
+        }
+        .footer {
+            margin-top: 2.8em;
+            font-size: 1em;
+            color: #94a3b8;
+            letter-spacing: 0.5px;
+        }
+        .footer a {
+            color: #38bdf8;
+            text-decoration: underline;
+        }
+        @media (max-width: 700px) {
+            .container { padding: 18px 6px; }
+            h1 { font-size: 1.5em; }
+            .download-card { min-width: 140px; padding: 1em 1em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PeakeCoin Trading Bot</h1>
+        <div class="desc">
+            Download the official PeakeCoin trading bot and start automating your trades!<br>
+            <span style="color:#fbbf24;font-weight:bold;">Python 3.11+ required.</span>
+        </div>
+        <div class="download-card">
+            <i class="fa-solid fa-robot"></i><br>
+            <span style="font-weight:700;color:#fbbf24;">Download Bot</span><br>
+            <a href="peakecoin_bot.zip" download style="background:linear-gradient(90deg,#fbbf24 0%,#38bdf8 100%);color:#1e293b;"><i class="fa-solid fa-file-zipper"></i> Download peakecoin_bot.zip</a>
+            <a href="peake_droid.py" download style="background:linear-gradient(90deg,#38bdf8 0%,#0ea5e9 100%);color:#fff;"><i class="fa-solid fa-mobile-alt"></i> Android/Command-Line Version</a>
+            <span style="display:block;margin:0.7em 0 0.2em 0;color:#cbd5e1;font-size:1em;">or download individual files:</span>
+            <a href="main.py" download>Main Bot (main.py)</a>
+            <a href="currency_bots/fetch_market.py" download>fetch_market.py</a>
+            <a href="currency_bots/place_order.py" download>place_order.py</a>
+            <a href="currency_bots/profit_strategies.py" download>profit_strategies.py</a>
+            <a href="utils/currency_utils.py" download>currency_utils.py</a>
+                <a href="currency_bots/" style="color:#38bdf8;font-weight:600;text-decoration:underline;margin-top:0.5em;display:block;" target="_blank"><i class="fa-solid fa-folder-open"></i> Browse all currency bots</a>
+        </div>
+        <div class="instructions">
+                <b>Instructions:</b> Download and extract the ZIP file above.<br>
+                Run <code>setup.bat</code> to set up your environment (Windows).<br>
+                Start the bot with <code>main_server.py</code> (advanced GUI) or <code>main.py</code>.<br>
+                For details, see the included README.
+        </div>
+        <div class="footer">
+            &copy; 2025 PeakeCoin Trading Bot &middot; <a href="https://www.geocities.ws/peakecoin/" style="color:#38bdf8;">peakecoin</a>
+        </div>
+    </div>
+</body>
+</html>

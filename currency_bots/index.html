@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PeakeCoin Currency Bots</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(120deg, #0f172a 0%, #0ea5e9 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            position: relative;
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 520px;
+            margin: 60px auto;
+            background: rgba(30,41,59,0.7);
+            border-radius: 22px;
+            box-shadow: 0 12px 48px rgba(14,165,233,0.18), 0 2px 8px rgba(0,0,0,0.12);
+            padding: 40px 28px 28px 28px;
+            text-align: center;
+            backdrop-filter: blur(12px) saturate(1.2);
+            position: relative;
+            z-index: 1;
+        }
+        h1 {
+            font-size: 2em;
+            margin-bottom: 0.15em;
+            letter-spacing: 2px;
+            font-weight: 900;
+            background: linear-gradient(90deg, #38bdf8 0%, #fbbf24 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .desc {
+            margin: 1.5em 0 1.2em 0;
+            font-size: 1.08em;
+            color: #cbd5e1;
+            line-height: 1.6;
+        }
+        .bot-list {
+            margin: 1.5em 0 1.5em 0;
+            text-align: left;
+            display: inline-block;
+        }
+        .bot-list a {
+            display: flex;
+            align-items: center;
+            background: linear-gradient(90deg, #0ea5e9 0%, #38bdf8 100%);
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.08em;
+            padding: 0.7em 1.2em;
+            border-radius: 10px;
+            margin-bottom: 0.7em;
+            box-shadow: 0 2px 12px rgba(14,165,233,0.10);
+            transition: background 0.18s, color 0.18s;
+        }
+        .bot-list a:hover {
+            background: linear-gradient(90deg, #fbbf24 0%, #38bdf8 100%);
+            color: #1e293b;
+        }
+        .bot-list i {
+            margin-right: 0.7em;
+            color: #fbbf24;
+            font-size: 1.2em;
+        }
+        .footer {
+            margin-top: 2.2em;
+            font-size: 1em;
+            color: #94a3b8;
+            letter-spacing: 0.5px;
+        }
+        .footer a {
+            color: #38bdf8;
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            .container { padding: 12px 2px; }
+            h1 { font-size: 1.3em; }
+            .bot-list a { font-size: 1em; padding: 0.5em 0.7em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PeakeCoin Currency Bots</h1>
+        <div class="desc">
+            Download individual currency bot modules for use with the PeakeCoin Trading Bot.<br>
+            <span style="color:#fbbf24;font-weight:bold;">Python 3.11+ required.</span>
+        </div>
+        <div class="bot-list">
+            <a href="fetch_market.py" download><i class="fa-solid fa-download"></i>fetch_market.py</a>
+            <a href="place_order.py" download><i class="fa-solid fa-download"></i>place_order.py</a>
+            <a href="profit_strategies.py" download><i class="fa-solid fa-download"></i>profit_strategies.py</a>
+            <a href="uni_btc.py" download><i class="fa-brands fa-btc"></i>uni_btc.py</a>
+            <a href="uni_doge.py" download><i class="fa-brands fa-dog"></i>uni_doge.py</a>
+            <a href="uni_eth.py" download><i class="fa-brands fa-ethereum"></i>uni_eth.py</a>
+            <a href="uni_hbd.py" download><i class="fa-solid fa-coins"></i>uni_hbd.py</a>
+            <a href="uni_ltc.py" download><i class="fa-solid fa-coins"></i>uni_ltc.py</a>
+            <a href="uni_tether.py" download><i class="fa-solid fa-dollar-sign"></i>uni_tether.py</a>
+            <a href="uni_blurt.py" download><i class="fa-solid fa-bolt"></i>uni_blurt.py</a>
+            <a href="uni_pimp.py" download><i class="fa-solid fa-star"></i>uni_pimp.py</a>
+        </div>
+        <div class="footer">
+            &copy; 2025 PeakeCoin Currency Bots &middot; <a href="../index.html" style="color:#38bdf8;">Back to Trading Bot</a>
+        </div>
+    </div>
+</body>
+</html>
