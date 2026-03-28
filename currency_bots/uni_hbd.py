@@ -1,34 +1,11 @@
-from currency_bots.profit_strategies import get_profit_percent
+from currency_bots.profit_strategies import choose_sell_price, get_profit_percent
 import time
-from currency_bots.fetch_market import get_orderbook_top
+from currency_bots.fetch_market import get_orderbook_top, get_resource_credits, MIN_RESOURCE_CREDITS
 from currency_bots.place_order import place_order, get_open_orders, get_balance
 
 HIVE_NODES = ["https://api.hive.blog", "https://anyx.io"]
 TOKEN = "SWAP.HBD"
 DELAY = 1500
-
-def get_resource_credits(account_name):
-    try:
-        import requests
-        url = "https://api.hive.blog"
-        payload = {
-            "jsonrpc": "2.0",
-            "method": "rc_api.find_rc_accounts",
-            "params": {"accounts": [account_name]},
-            "id": 1
-        }
-        resp = requests.post(url, json=payload, timeout=10)
-        if resp.status_code == 200:
-            data = resp.json()
-            rc = data.get('result', {}).get('rc_accounts', [{}])[0]
-            if rc and 'rc_manabar' in rc and 'max_rc' in rc:
-                current = int(rc['rc_manabar']['current_mana'])
-                max_rc = int(rc['max_rc'])
-                percent = round(current / max_rc * 100, 2) if max_rc > 0 else 0.0
-                return percent
-    except Exception:
-        pass
-    return None
 
 def run_bot(username, active_key, profit_target=1.0):
     print("\n==============================")
@@ -36,7 +13,7 @@ def run_bot(username, active_key, profit_target=1.0):
     rc_percent = get_resource_credits(username)
     if rc_percent is not None:
         print(f"[HBD BOT] Resource Credits: {rc_percent}%")
-        if rc_percent < 10.0:
+        if rc_percent < MIN_RESOURCE_CREDITS:
             print(f"[HBD BOT] WARNING: Resource Credits too low ({rc_percent}%). Skipping trade cycle.")
             print("==============================\n")
             return
@@ -64,9 +41,7 @@ def run_bot(username, active_key, profit_target=1.0):
     bid = float(market.get("highestBid", 0))
     ask = float(market.get("lowestAsk", 0))
     buy_price = round(bid, 8) if bid > 0 else 0
-    sell_price = round(ask, 8) if ask > 0 else 0
-    if buy_price >= sell_price and buy_price > 0:
-        sell_price = round(buy_price * (1 + profit_target / 100), 8)
+    sell_price = choose_sell_price(buy_price, ask, profit_target, precision=8)
     hive_balance = get_balance(username, "SWAP.HIVE")
     hbd_balance = get_balance(username, TOKEN)
     buy_qty = round(hive_balance * 0.20 / buy_price, 8) if buy_price > 0 else 0
@@ -92,9 +67,7 @@ def run_bot(username, active_key, profit_target=1.0):
             time.sleep(1)
         except Exception as e:
             print(f"[HBD BOT] BUY order exception: {e}")
-    min_profit_percent = profit_target / 100
-    min_sell_price = round(buy_price * (1 + min_profit_percent), 8)
-    force_sell_price = min_sell_price
+    force_sell_price = sell_price
     if force_sell_price > buy_price and sell_qty > 0:
         open_orders = get_open_orders(username, TOKEN)
         duplicate_sell = any(o.get('type') == 'sell' and float(o.get('price', 0)) == force_sell_price for o in open_orders)
@@ -130,4 +103,5 @@ def run_bot(username, active_key, profit_target=1.0):
     except Exception as e:
         print(f"[HBD BOT] PEK buy exception: {e}")
     time.sleep(2)
+    print(f"[HBD BOT] Cooldown wait: {DELAY}s before next cycle.")
     time.sleep(DELAY)

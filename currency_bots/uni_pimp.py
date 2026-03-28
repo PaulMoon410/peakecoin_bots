@@ -1,6 +1,7 @@
 import time
-from currency_bots.fetch_market import get_orderbook_top, get_balance, get_resource_credits
-from currency_bots.place_order import place_order, get_open_orders
+from currency_bots.fetch_market import get_orderbook_top, get_resource_credits, MIN_RESOURCE_CREDITS
+from currency_bots.place_order import place_order, get_open_orders, get_balance
+from currency_bots.profit_strategies import choose_sell_price, get_profit_percent
 
 TOKEN = "PIMP"
 HIVE_NODES = ["api.hive.blog", "anyx.io", "hive.roelandp.nl"]
@@ -12,7 +13,7 @@ def run_bot(username, active_key, profit_target=2.0):
     rc_percent = get_resource_credits(username)
     if rc_percent is not None:
         print(f"[PIMP BOT] Resource Credits: {rc_percent}%")
-        if rc_percent < 10.0:
+        if rc_percent < MIN_RESOURCE_CREDITS:
             print(f"[PIMP BOT] WARNING: Resource Credits too low ({rc_percent}%). Skipping trade cycle.")
             print("==============================\n")
             return
@@ -38,7 +39,7 @@ def run_bot(username, active_key, profit_target=2.0):
     bid = float(market.get("highestBid", 0))
     ask = float(market.get("lowestAsk", 0))
     buy_price = round(bid, 8) if bid > 0 else 0
-    sell_price = round(ask, 8) if ask > 0 else 0
+    sell_price = choose_sell_price(buy_price, ask, profit_target, precision=8)
 
     hive_balance = get_balance(username, "SWAP.HIVE")
     pimp_balance = get_balance(username, TOKEN)
@@ -66,9 +67,7 @@ def run_bot(username, active_key, profit_target=2.0):
         except Exception as e:
             print(f"[PIMP BOT] BUY order exception: {e}")
 
-    min_profit_percent = profit_target / 100
-    min_sell_price = round(buy_price * (1 + min_profit_percent), 8)
-    force_sell_price = min_sell_price
+    force_sell_price = sell_price
     print(f"[PIMP BOT] Preparing SELL: {sell_qty} {TOKEN} at {force_sell_price}")
     open_orders = get_open_orders(username, TOKEN)
     duplicate_sell = any(o.get('type') == 'sell' and float(o.get('price', 0)) == force_sell_price for o in open_orders)
@@ -79,7 +78,7 @@ def run_bot(username, active_key, profit_target=2.0):
             try:
                 place_order(username, TOKEN, force_sell_price, sell_qty, order_type="sell", active_key=active_key, nodes=HIVE_NODES)
                 print(f"[PIMP BOT] SELL order submitted: {sell_qty} {TOKEN} at {force_sell_price}")
-                print(f"[PIMP BOT] Profit percent: {round((force_sell_price-buy_price)/buy_price*100,2)}%")
+                print(f"[PIMP BOT] Profit percent: {get_profit_percent(buy_price, force_sell_price)}%")
                 time.sleep(5)
                 open_orders = get_open_orders(username, TOKEN)
                 if open_orders:
@@ -93,4 +92,5 @@ def run_bot(username, active_key, profit_target=2.0):
         print(f"[PIMP BOT] SELL order skipped: Not profitable or sell_qty is zero.")
     print(f"[PIMP BOT] Trade cycle for {TOKEN} complete.")
     print("==============================\n")
+    print(f"[PIMP BOT] Cooldown wait: {DELAY}s before next cycle.")
     time.sleep(DELAY)

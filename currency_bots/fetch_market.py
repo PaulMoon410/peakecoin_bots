@@ -1,5 +1,9 @@
 import requests
 
+DEFAULT_HIVE_RC_NODE = "https://api.hive.blog"
+DEFAULT_ENGINE_NODE = "https://api.hive-engine.com/rpc/contracts"
+MIN_RESOURCE_CREDITS = 10.0
+
 def get_orderbook_top(token="SWAP.LTC"):
     # Pull top buy orders (usually works correctly with sorting)
     buy_payload = {
@@ -30,12 +34,20 @@ def get_orderbook_top(token="SWAP.LTC"):
     }
 
     # Request both buy and sell books
-    buy_response = requests.post("https://api.hive-engine.com/rpc/contracts", json=buy_payload)
-    sell_response = requests.post("https://api.hive-engine.com/rpc/contracts", json=sell_payload)
+    try:
+        buy_response = requests.post(DEFAULT_ENGINE_NODE, json=buy_payload, timeout=12)
+        sell_response = requests.post(DEFAULT_ENGINE_NODE, json=sell_payload, timeout=12)
+    except Exception as exc:
+        print(f"[MARKET] Request exception for {token}: {exc}")
+        return None
 
     if buy_response.status_code == 200 and sell_response.status_code == 200:
-        buy_result = buy_response.json().get("result", [])
-        sell_result = sell_response.json().get("result", [])
+        try:
+            buy_result = buy_response.json().get("result", [])
+            sell_result = sell_response.json().get("result", [])
+        except Exception as exc:
+            print(f"[MARKET] JSON parse error for {token}: {exc}")
+            return None
 
         # Use the highest priced buy order (top bid)
         highest_bid = float(buy_result[0]["price"]) if buy_result else 0
@@ -45,6 +57,11 @@ def get_orderbook_top(token="SWAP.LTC"):
         lowest_ask = min(valid_asks) if valid_asks else 0
 
         return {"highestBid": highest_bid, "lowestAsk": lowest_ask}
+
+    print(
+        f"[MARKET] HTTP failure for {token}: "
+        f"buy={buy_response.status_code}, sell={sell_response.status_code}"
+    )
 
     return None
 
@@ -119,3 +136,24 @@ def get_account_open_orders_all_tokens(account, limit=1000):
             break
         offset += page_size
     return all_orders
+
+def get_resource_credits(account_name, node_url=DEFAULT_HIVE_RC_NODE):
+    """Return current resource credits percentage for the Hive account."""
+    try:
+        payload = {
+            "jsonrpc": "2.0",
+            "method": "rc_api.find_rc_accounts",
+            "params": {"accounts": [account_name]},
+            "id": 1
+        }
+        resp = requests.post(node_url, json=payload, timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            rc = data.get("result", {}).get("rc_accounts", [{}])[0]
+            if rc and "rc_manabar" in rc and "max_rc" in rc:
+                current = int(rc["rc_manabar"]["current_mana"])
+                max_rc = int(rc["max_rc"])
+                return round(current / max_rc * 100, 2) if max_rc > 0 else 0.0
+    except Exception:
+        pass
+    return None
