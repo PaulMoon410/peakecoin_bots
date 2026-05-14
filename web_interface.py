@@ -77,6 +77,11 @@ class BotWebInterface(SimpleHTTPRequestHandler):
 </head>
 <body>
     <div class='container'>
+                <div class='section'>
+                    <h3>Hive Keychain Login</h3>
+                    <button id="keychainLoginBtn" onclick="hiveKeychainLogin()">Login with Hive Keychain</button>
+                    <div id="keychainStatus" style="margin-top:10px;"></div>
+                </div>
         <h1>🚀 PeakeCoin Bot Dashboard</h1>
         <div class='section'>
             <h3>Server Status</h3>
@@ -118,6 +123,27 @@ class BotWebInterface(SimpleHTTPRequestHandler):
         </div>
     </div>
     <script>
+                // Hive Keychain login integration
+                function hiveKeychainLogin() {
+                    if (window.hive_keychain) {
+                        const username = prompt('Enter your Hive username:');
+                        if (!username) return;
+                        window.hive_keychain.requestSignBuffer(
+                            username,
+                            'Login to PeakeCoin Bot Dashboard',
+                            'Posting',
+                            function(response) {
+                                if (response.success) {
+                                    document.getElementById('keychainStatus').textContent = '✅ Logged in as ' + username;
+                                } else {
+                                    document.getElementById('keychainStatus').textContent = '❌ Login failed or cancelled.';
+                                }
+                            }
+                        );
+                    } else {
+                        document.getElementById('keychainStatus').textContent = '❌ Hive Keychain extension not detected.';
+                    }
+                }
         function updateTime() {
             document.getElementById('serverTime').textContent = new Date().toLocaleString();
         }
