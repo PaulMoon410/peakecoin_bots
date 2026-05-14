@@ -4,6 +4,7 @@ import threading
 import signal
 import sys
 from utils.currency_utils import get_available_currencies
+from utils.settings import DEFAULT_PROFIT_TARGET, MAX_PROFIT_TARGET, MIN_PROFIT_TARGET, PEAKECOIN_CURRENCIES, PEAKECOIN_USERNAME, get_active_key
 import importlib.util
 
 class PeakeBotServer:
@@ -137,7 +138,8 @@ class PeakeBotServer:
         self.log_message("=" * 50)
         
         # Get user input
-        username = input("Enter your PeakeCoin username: ").strip()
+        username_prompt = f"Enter your PeakeCoin username [{PEAKECOIN_USERNAME}]: " if PEAKECOIN_USERNAME else "Enter your PeakeCoin username: "
+        username = input(username_prompt).strip() or PEAKECOIN_USERNAME
         if not username:
             print("❌ Username is required")
             return
@@ -146,8 +148,13 @@ class PeakeBotServer:
         currency_bots_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'currency_bots'))
         currencies = get_available_currencies(currency_bots_path)
         
+        default_currencies = [currency for currency in PEAKECOIN_CURRENCIES if currency in currencies]
         print(f"\nAvailable currencies: {', '.join(currencies)}")
-        selected_input = input("Enter currencies to trade (comma separated, e.g., BTC,ETH,DOGE): ").strip()
+        default_label = ",".join(default_currencies)
+        selected_prompt = "Enter currencies to trade (comma separated, e.g., BTC,ETH,DOGE)"
+        if default_label:
+            selected_prompt += f" [{default_label}]"
+        selected_input = input(f"{selected_prompt}: ").strip() or default_label
         
         if not selected_input:
             print("❌ No currencies selected")
@@ -163,7 +170,9 @@ class PeakeBotServer:
         # Get keys for each currency
         keys = {}
         for currency in valid_currencies:
-            key = input(f"Enter active key for {currency}: ").strip()
+            env_key = get_active_key(currency)
+            key_prompt = f"Enter active key for {currency} [from .env]: " if env_key else f"Enter active key for {currency}: "
+            key = input(key_prompt).strip() or env_key
             if not key:
                 print(f"❌ Key required for {currency}")
                 return
@@ -172,11 +181,13 @@ class PeakeBotServer:
         # Get profit target
         while True:
             try:
-                profit_target = float(input("Enter profit percentage target (0.5 - 20.0): ").strip())
-                if 0.5 <= profit_target <= 20.0:
+                prompt = f"Enter profit percentage target ({MIN_PROFIT_TARGET} - {MAX_PROFIT_TARGET}) [{DEFAULT_PROFIT_TARGET}]: "
+                profit_input = input(prompt).strip()
+                profit_target = float(profit_input) if profit_input else DEFAULT_PROFIT_TARGET
+                if MIN_PROFIT_TARGET <= profit_target <= MAX_PROFIT_TARGET:
                     break
                 else:
-                    print("❌ Profit target must be between 0.5 and 20.0")
+                    print(f"❌ Profit target must be between {MIN_PROFIT_TARGET} and {MAX_PROFIT_TARGET}")
             except ValueError:
                 print("❌ Please enter a valid number")
                 

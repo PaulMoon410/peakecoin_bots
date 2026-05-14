@@ -1,8 +1,6 @@
 import requests
 
-DEFAULT_HIVE_RC_NODE = "https://api.hive.blog"
-DEFAULT_ENGINE_NODE = "https://api.hive-engine.com/rpc/contracts"
-MIN_RESOURCE_CREDITS = 10.0
+from utils.settings import DEFAULT_ENGINE_NODE, DEFAULT_HIVE_RC_NODE, MIN_RESOURCE_CREDITS
 
 def get_orderbook_top(token="SWAP.LTC"):
     # Pull top buy orders (usually works correctly with sorting)

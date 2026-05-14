@@ -5,110 +5,136 @@ import json
 import threading
 import time
 
+from utils.settings import API_KEY_REQUIRED, REQUIRE_HTTPS, SERVER_PORT, WEB_API_KEY
+
 class BotWebInterface(SimpleHTTPRequestHandler):
+    def _send_common_headers(self):
+        self.send_header('X-Content-Type-Options', 'nosniff')
+        self.send_header('X-Frame-Options', 'DENY')
+        self.send_header('Referrer-Policy', 'same-origin')
+
+    def _is_https_request(self):
+        forwarded_proto = self.headers.get('X-Forwarded-Proto', '')
+        return forwarded_proto.lower() == 'https'
+
+    def _redirect_to_https(self):
+        host = self.headers.get('Host', 'localhost')
+        location = f"https://{host}{self.path}"
+        self.send_response(301)
+        self.send_header('Location', location)
+        self._send_common_headers()
+        self.end_headers()
+
+    def _authorize_request(self):
+        if not API_KEY_REQUIRED:
+            return True
+        if not WEB_API_KEY:
+            return False
+        supplied_key = self.headers.get('X-API-Key', '')
+        return supplied_key == WEB_API_KEY
+
     def do_GET(self):
+        if REQUIRE_HTTPS and not self._is_https_request():
+            self._redirect_to_https()
+            return
+
+        if not self._authorize_request():
+            self.send_response(401)
+            self.send_header('Content-type', 'application/json')
+            self._send_common_headers()
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+            return
+
         if self.path == '/':
             self.send_response(200)
             self.send_header('Content-type', 'text/html')
+            self._send_common_headers()
             self.end_headers()
-            
             html_content = """
 <!DOCTYPE html>
-<html>
+<html lang='en'>
 <head>
-    <title>PeakeCoin Bot Server</title>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>PeakeCoin Bot Dashboard</title>
+    <link href='https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap' rel='stylesheet'>
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f5f5f5; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { color: #333; text-align: center; }
-        .section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
-        .status { padding: 10px; border-radius: 5px; margin: 10px 0; }
-        .running { background-color: #d4edda; color: #155724; }
-        .stopped { background-color: #f8d7da; color: #721c24; }
-        button { background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
-        button:hover { background-color: #0056b3; }
-        .log-area { background-color: #f8f9fa; padding: 15px; border-radius: 5px; height: 200px; overflow-y: scroll; font-family: monospace; font-size: 12px; }
-        .currency-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 10px 0; }
-        .currency-item { padding: 10px; background-color: #e9ecef; border-radius: 5px; text-align: center; }
+        body { font-family: 'Inter', Arial, sans-serif; background: linear-gradient(120deg, #0f172a 0%, #0ea5e9 100%); min-height: 100vh; margin: 0; }
+        .container { max-width: 700px; margin: 40px auto; background: rgba(30,41,59,0.8); border-radius: 18px; box-shadow: 0 12px 48px rgba(14,165,233,0.18), 0 2px 8px rgba(0,0,0,0.12); padding: 40px 32px 32px 32px; text-align: center; color: #fff; }
+        h1 { font-size: 2.2em; margin-bottom: 0.15em; font-weight: 900; background: linear-gradient(90deg, #38bdf8 0%, #fbbf24 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .section { margin: 22px 0; padding: 18px; background: rgba(255,255,255,0.05); border-radius: 10px; }
+        .status { padding: 10px; border-radius: 5px; margin: 10px 0; font-weight: 600; }
+        .running { background-color: #22c55e33; color: #22c55e; }
+        .stopped { background-color: #ef444433; color: #ef4444; }
+        button { background-color: #0ea5e9; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; font-weight: 600; }
+        button:hover { background-color: #0369a1; }
+        .currency-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 10px 0; }
+        .currency-item { padding: 10px; background-color: #334155; border-radius: 5px; text-align: center; font-weight: 600; }
+        .log-area { background-color: #0f172a; padding: 15px; border-radius: 5px; height: 180px; overflow-y: scroll; font-family: monospace; font-size: 13px; color: #fbbf24; text-align: left; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🚀 PeakeCoin Bot Server</h1>
-        
-        <div class="section">
+    <div class='container'>
+        <h1>🚀 PeakeCoin Bot Dashboard</h1>
+        <div class='section'>
             <h3>Server Status</h3>
-            <div class="status running">✅ Server is running</div>
-            <div>Server Time: <span id="serverTime"></span></div>
+            <div class='status running'>✅ Server is running</div>
+            <div>Server Time: <span id='serverTime'></span></div>
             <div>Bot Version: v1.0</div>
         </div>
-        
-        <div class="section">
+        <div class='section'>
             <h3>Available Currency Bots</h3>
-            <div class="currency-list">
-                <div class="currency-item">BTC</div>
-                <div class="currency-item">ETH</div>
-                <div class="currency-item">DOGE</div>
-                <div class="currency-item">LTC</div>
-                <div class="currency-item">TETHER</div>
-                <div class="currency-item">HBD</div>
-                <div class="currency-item">BLURT</div>
+            <div class='currency-list' id='botList'>
+                <div class='currency-item'>BTC <button onclick="startBot('BTC')">Start</button> <button onclick="stopBot('BTC')">Stop</button></div>
+                <div class='currency-item'>ETH <button onclick="startBot('ETH')">Start</button> <button onclick="stopBot('ETH')">Stop</button></div>
+                <div class='currency-item'>DOGE <button onclick="startBot('DOGE')">Start</button> <button onclick="stopBot('DOGE')">Stop</button></div>
+                <div class='currency-item'>LTC <button onclick="startBot('LTC')">Start</button> <button onclick="stopBot('LTC')">Stop</button></div>
+                <div class='currency-item'>TETHER <button onclick="startBot('TETHER')">Start</button> <button onclick="stopBot('TETHER')">Stop</button></div>
+                <div class='currency-item'>HBD <button onclick="startBot('HBD')">Start</button> <button onclick="stopBot('HBD')">Stop</button></div>
+                <div class='currency-item'>BLURT <button onclick="startBot('BLURT')">Start</button> <button onclick="stopBot('BLURT')">Stop</button></div>
             </div>
         </div>
-        
-        <div class="section">
+        <div class='section'>
+            <h3>Bot Logs</h3>
+            <div class='log-area' id='logArea'>Waiting for logs...</div>
+        </div>
+        <div class='section'>
             <h3>How to Use</h3>
-            <ol>
+            <ol style='text-align:left;'>
                 <li><strong>Command Line:</strong> Run <code>python peake_droid.py</code> in the server terminal</li>
                 <li><strong>Desktop GUI:</strong> Run <code>python main.py</code> (requires desktop environment)</li>
                 <li><strong>Background Service:</strong> Use screen, tmux, or systemd for production</li>
             </ol>
         </div>
-        
-        <div class="section">
-            <h3>Quick Start Commands</h3>
-            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; font-family: monospace;">
-                # Install dependencies<br>
-                pip install -r requirements.txt<br><br>
-                
-                # Run command-line version<br>
-                python peake_droid.py<br><br>
-                
-                # Run in background (Linux/Mac)<br>
-                screen -S peakebot python peake_droid.py<br><br>
-                
-                # Check running screens<br>
-                screen -ls
-            </div>
-        </div>
-        
-        <div class="section">
-            <h3>Important Notes</h3>
-            <ul>
-                <li>🔐 <strong>Security:</strong> Never share your private keys</li>
-                <li>⚡ <strong>Resources:</strong> Monitor your Hive Resource Credits</li>
-                <li>📊 <strong>Profit:</strong> Set realistic profit targets (0.5% - 20%)</li>
-                <li>🔄 <strong>Monitoring:</strong> Check bot status regularly</li>
-                <li>💾 <strong>Backup:</strong> Keep backups of your configuration</li>
-            </ul>
-        </div>
-        
-        <div class="section">
+        <div class='section'>
             <h3>Support</h3>
             <p>For help and support, join the PeakeCoin community or refer to the documentation files:</p>
-            <ul>
+            <ul style='text-align:left;'>
                 <li>README.md - Basic usage guide</li>
                 <li>SERVER_DEPLOYMENT.md - Server setup guide</li>
             </ul>
         </div>
     </div>
-    
     <script>
         function updateTime() {
             document.getElementById('serverTime').textContent = new Date().toLocaleString();
         }
         updateTime();
         setInterval(updateTime, 1000);
+        // Placeholder for bot control
+        function startBot(bot) {
+            logMsg('Starting ' + bot + ' bot... (API integration needed)');
+        }
+        function stopBot(bot) {
+            logMsg('Stopping ' + bot + ' bot... (API integration needed)');
+        }
+        function logMsg(msg) {
+            let logArea = document.getElementById('logArea');
+            logArea.textContent += '\n' + new Date().toLocaleTimeString() + ' - ' + msg;
+            logArea.scrollTop = logArea.scrollHeight;
+        }
     </script>
 </body>
 </html>
@@ -134,5 +160,5 @@ def start_web_server(port=8080):
 
 if __name__ == "__main__":
     import sys
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else 8080
+    port = int(sys.argv[1]) if len(sys.argv) > 1 else SERVER_PORT
     start_web_server(port)

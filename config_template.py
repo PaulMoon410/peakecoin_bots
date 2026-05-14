@@ -1,5 +1,6 @@
-# PeakeCoin Bot Configuration
-# Copy this file to config.py and modify the settings
+# Legacy configuration reference
+# Runtime settings now load from .env via utils/settings.py.
+# Copy .env.example to .env and set your values there instead.
 
 # Server Settings
 SERVER_PORT = 8080

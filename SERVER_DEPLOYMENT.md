@@ -106,6 +106,29 @@ wget your-bot-download-link.zip && unzip peakebot.zip && cd plug_and_play_bot &&
 
 ## Process Management (Keeping Bot Running 24/7)
 
+## Environment File
+
+Create a `.env` file from the example before starting the bot:
+
+```bash
+cp .env.example .env
+```
+
+Recommended server variables:
+
+```bash
+PORT=8080
+REQUIRE_HTTPS=true
+API_KEY_REQUIRED=true
+WEB_API_KEY=replace-this
+PEAKECOIN_USERNAME=your-account
+PEAKECOIN_CURRENCIES=BTC,ETH
+PEAKECOIN_ACTIVE_KEY_BTC=...
+PEAKECOIN_ACTIVE_KEY_ETH=...
+```
+
+`server_bot.py` and `peake_droid.py` will use these values as defaults, so secrets can stay in environment variables instead of being typed interactively each run.
+
 ### Using systemd (Linux - Recommended for Production)
 
 Create a service file `/etc/systemd/system/peakebot.service`:
@@ -120,6 +143,7 @@ Type=simple
 User=your-username
 WorkingDirectory=/home/your-username/plug_and_play_bot
 Environment=PATH=/home/your-username/plug_and_play_bot/venv/bin
+EnvironmentFile=/home/your-username/plug_and_play_bot/.env
 ExecStart=/home/your-username/plug_and_play_bot/venv/bin/python server_bot.py
 Restart=always
 RestartSec=10
@@ -173,6 +197,7 @@ pm2 restart peakebot
 3. **Set up firewall rules if needed**
 4. **Keep your server updated**
 5. **Use strong passwords and SSH keys**
+6. **Do not commit `.env` files to source control**
 
 ## Monitoring Your Bot
 

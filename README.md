@@ -98,9 +98,14 @@ chmod +x deploy_server.sh && ./deploy_server.sh
 1. **Install Python 3.11+**
 2. **Install dependencies:**
    ```
-   pip install requests
+   pip install -r requirements.txt
    ```
-3. **Choose your interface:**
+3. **Optional: create an environment file for secrets and deployment settings:**
+   ```
+   cp .env.example .env
+   ```
+   Use `.env` for server port, HTTPS/API protection, username defaults, and active keys.
+4. **Choose your interface:**
    ```
    python main.py          # Simple GUI (single runs)
    python main_server.py   # Enhanced GUI (single + continuous)
@@ -110,6 +115,33 @@ chmod +x deploy_server.sh && ./deploy_server.sh
 4. **Fill in your username, select currencies, enter keys, and set your profit target.**
 
 > **💡 For 24/7 trading:** Use `main_server.py` (GUI) or `server_bot.py` (command line) and select continuous mode.
+
+## Environment Variables
+
+The bot now loads `.env` automatically from the project root.
+
+Common settings:
+```bash
+cp .env.example .env
+```
+
+Useful variables:
+- `PORT` or `SERVER_PORT` for Render and other hosted platforms
+- `REQUIRE_HTTPS=true` to force HTTPS redirects behind a proxy
+- `API_KEY_REQUIRED=true` and `WEB_API_KEY=...` to protect the web interface
+- `PEAKECOIN_USERNAME=...` to avoid retyping the account name
+- `PEAKECOIN_CURRENCIES=BTC,ETH` to preselect server/CLI currencies
+- `PEAKECOIN_ACTIVE_KEY_BTC=...` and similar per-currency active keys
+
+When `PEAKECOIN_ACTIVE_KEY_<CURRENCY>` variables are present, the CLI and server modes will use them as defaults instead of requiring you to type secrets every run.
+
+## Render Notes
+
+For a Render web service:
+- Build command: `pip install -r requirements.txt`
+- Start command: `python web_interface.py`
+- Set environment variables in the Render dashboard instead of committing `.env`
+- Render supplies `PORT` automatically; the app now respects it
 
 ---
 
@@ -155,3 +187,11 @@ chmod +x deploy_server.sh && ./deploy_server.sh
 - 🆕 **Updates:** Check for new currency support and features
 
 **New in this version:** SWAP.BLURT support added!
+
+## Linux GUI Note
+
+The Tk desktop apps use the system Tk package. On Linux, install it with your OS package manager, for example:
+
+```bash
+sudo apt-get install python3-tk
+```
