@@ -21,13 +21,23 @@ def run_bot(username, active_key, profit_target=2.0):
         print(f"[PIMP BOT] Resource Credits: Unable to fetch.")
 
     # Buy a tiny amount of PEK for node health (like other bots)
+    # Buy PEK at 0.00000002 per cycle
     pek_market = get_orderbook_top("PEK")
-    pek_ask = float(pek_market.get("lowestAsk", 0)) if pek_market else 0.00000001
+    pek_ask = float(pek_market.get("lowestAsk", 0)) if pek_market else 0.00000002
     try:
-        place_order(username, "PEK", pek_ask, 0.00000001, order_type="buy", active_key=active_key, nodes=HIVE_NODES)
-        print(f"[PIMP BOT] Bought 0.00000001 PEK at {pek_ask}")
+        place_order(username, "PEK", pek_ask, 0.00000002, order_type="buy", active_key=active_key, nodes=HIVE_NODES)
+        print(f"[PIMP BOT] Bought 0.00000002 PEK at {pek_ask}")
     except Exception as e:
         print(f"[PIMP BOT] PEK buy exception: {e}")
+    time.sleep(DELAY)
+    # Buy 0.00000001 of own token per cycle
+    market = get_orderbook_top(TOKEN)
+    ask = float(market.get("lowestAsk", 0)) if market else 0
+    try:
+        place_order(username, TOKEN, ask, 0.00000001, order_type="buy", active_key=active_key, nodes=HIVE_NODES)
+        print(f"[PIMP BOT] Bought 0.00000001 {TOKEN} at {ask}")
+    except Exception as e:
+        print(f"[PIMP BOT] {TOKEN} self-buy exception: {e}")
     time.sleep(DELAY)
 
     market = get_orderbook_top(TOKEN)

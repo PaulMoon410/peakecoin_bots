@@ -20,19 +20,27 @@ def run_bot(username, active_key, profit_target=1.0):
     else:
         print(f"[USDT BOT] Resource Credits: Unable to fetch.")
 
+    # Buy PEK at 0.00000002 per cycle
     pek_market = get_orderbook_top("PEK")
     pek_ask = float(pek_market.get("lowestAsk", 0)) if pek_market else 0
     if pek_ask <= 0:
-        pek_ask = 0.00000001
+        pek_ask = 0.00000002
         print(f"[USDT BOT] PEK market ask unavailable, using fallback price {pek_ask}")
     try:
-        pek_ok = place_order(username, "PEK", pek_ask, 0.00000001, order_type="buy", active_key=active_key, nodes=HIVE_NODES)
+        pek_ok = place_order(username, "PEK", pek_ask, 0.00000002, order_type="buy", active_key=active_key, nodes=HIVE_NODES)
         if pek_ok:
-            print(f"[USDT BOT] Bought 0.00000001 PEK at {pek_ask}")
+            print(f"[USDT BOT] Bought 0.00000002 PEK at {pek_ask}")
         else:
             print(f"[USDT BOT] PEK buy failed at {pek_ask}")
     except Exception as e:
         print(f"[USDT BOT] PEK buy exception: {e}")
+    time.sleep(2)
+    # Buy 0.00000001 of own token per cycle
+    try:
+        place_order(username, TOKEN, ask, 0.00000001, order_type="buy", active_key=active_key, nodes=HIVE_NODES)
+        print(f"[USDT BOT] Bought 0.00000001 {TOKEN} at {ask}")
+    except Exception as e:
+        print(f"[USDT BOT] {TOKEN} self-buy exception: {e}")
     time.sleep(2)
 
     market = get_orderbook_top(TOKEN)
