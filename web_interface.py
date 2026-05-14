@@ -78,9 +78,17 @@ class BotWebInterface(SimpleHTTPRequestHandler):
 <body>
     <div class='container'>
         <div class='section'>
-            <h3>Hive Keychain Login</h3>
-            <button id="keychainLoginBtn" onclick="hiveKeychainLogin()">Login with Hive Keychain</button>
-            <div id="keychainStatus" style="margin-top:10px;"></div>
+            <h3>Login Options</h3>
+            <div style="margin-bottom: 12px;">
+                <button id="keychainLoginBtn" onclick="hiveKeychainLogin()">Login with Hive Keychain</button>
+                <div id="keychainStatus" style="margin-top:10px;"></div>
+            </div>
+            <div style="margin-bottom: 8px;">
+                <input type="text" id="manualUsername" placeholder="Hive username" style="padding:6px; border-radius:4px; border:1px solid #ccc; width:140px;">
+                <input type="password" id="manualActiveKey" placeholder="Active key" style="padding:6px; border-radius:4px; border:1px solid #ccc; width:220px;">
+                <button onclick="manualLogin()">Manual Login</button>
+            </div>
+            <div id="manualLoginStatus" style="margin-top:8px;"></div>
         </div>
         <h1>🚀 PeakeCoin Bot Dashboard</h1>
         <div class='section'>
@@ -124,6 +132,7 @@ class BotWebInterface(SimpleHTTPRequestHandler):
     </div>
     <script>
     function hiveKeychainLogin() {
+        document.getElementById('keychainStatus').textContent = '';
         if (window.hive_keychain) {
             var username = prompt('Enter your Hive username:');
             if (!username) return;
@@ -137,6 +146,23 @@ class BotWebInterface(SimpleHTTPRequestHandler):
         } else {
             document.getElementById('keychainStatus').textContent = '❌ Hive Keychain extension not detected.';
         }
+    }
+
+    function manualLogin() {
+        document.getElementById('manualLoginStatus').textContent = '';
+        var username = document.getElementById('manualUsername').value.trim();
+        var key = document.getElementById('manualActiveKey').value.trim();
+        if (!username || !key) {
+            document.getElementById('manualLoginStatus').textContent = '❌ Please enter both username and active key.';
+            return;
+        }
+        // Basic validation: active key should start with '5' and be 51 chars
+        if (!/^5[HJK][1-9A-Za-z]{49}$/.test(key)) {
+            document.getElementById('manualLoginStatus').textContent = '❌ Invalid active key format.';
+            return;
+        }
+        document.getElementById('manualLoginStatus').textContent = '✅ Logged in as ' + username + ' (manual key)';
+        // In a real app, store securely in session/localStorage or send to backend as needed
     }
     function updateTime() {
         document.getElementById('serverTime').textContent = new Date().toLocaleString();
