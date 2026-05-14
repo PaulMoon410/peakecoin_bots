@@ -1,13 +1,18 @@
+
 import time
 from currency_bots.fetch_market import get_orderbook_top, get_resource_credits, MIN_RESOURCE_CREDITS
-from currency_bots.place_order import place_order, get_open_orders, get_balance
-from currency_bots.profit_strategies import choose_sell_price, get_profit_percent, scalping_strategy
+from currency_bots.place_order import get_balance
+from currency_bots.order_manager import (
+    enforce_open_order_limit, cancel_oldest_order, place_profitable_order,
+    ensure_min_orders_per_cycle, handle_self_buy, handle_profit_currency_buy, PROFIT_CURRENCIES
+)
 
 TOKEN = "PIMP"
 HIVE_NODES = ["api.hive.blog", "anyx.io", "hive.roelandp.nl"]
 DELAY = 2
 
-def run_bot(username, active_key, profit_target=2.0, scalping_enabled=False):
+def run_bot(username, active_key, profit_target=2.0, scalping_enabled=False,
+            self_buy_enabled=True, profit_currency_enabled=False, profit_currency="PEK", profit_amount=0.00000001):
     print("\n==============================")
     print(f"[PIMP BOT] Starting Smart Trade for {TOKEN}")
     rc_percent = get_resource_credits(username)
@@ -20,25 +25,9 @@ def run_bot(username, active_key, profit_target=2.0, scalping_enabled=False):
     else:
         print(f"[PIMP BOT] Resource Credits: Unable to fetch.")
 
-    # Buy a tiny amount of PEK for node health (like other bots)
-    # Buy PEK at 0.00000002 per cycle
-    pek_market = get_orderbook_top("PEK")
-    pek_ask = float(pek_market.get("lowestAsk", 0)) if pek_market else 0.00000002
-    try:
-        place_order(username, "PEK", pek_ask, 0.00000002, order_type="buy", active_key=active_key, nodes=HIVE_NODES)
-        print(f"[PIMP BOT] Bought 0.00000002 PEK at {pek_ask}")
-    except Exception as e:
-        print(f"[PIMP BOT] PEK buy exception: {e}")
-    time.sleep(DELAY)
-    # Buy 0.00000001 of own token per cycle
-    market = get_orderbook_top(TOKEN)
-    ask = float(market.get("lowestAsk", 0)) if market else 0
-    try:
-        place_order(username, TOKEN, ask, 0.00000001, order_type="buy", active_key=active_key, nodes=HIVE_NODES)
-        print(f"[PIMP BOT] Bought 0.00000001 {TOKEN} at {ask}")
-    except Exception as e:
-        print(f"[PIMP BOT] {TOKEN} self-buy exception: {e}")
-    time.sleep(DELAY)
+    enforce_open_order_limit(username, TOKEN, active_key=active_key)
+    cancel_oldest_order(username, active_key=active_key)
+    # ...centralized order logic for PIMP bot...
 
     market = get_orderbook_top(TOKEN)
     if not market:

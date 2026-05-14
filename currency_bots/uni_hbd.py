@@ -1,13 +1,18 @@
 from currency_bots.profit_strategies import choose_sell_price, get_profit_percent, scalping_strategy
 import time
 from currency_bots.fetch_market import get_orderbook_top, get_resource_credits, MIN_RESOURCE_CREDITS
-from currency_bots.place_order import place_order, get_open_orders, get_balance
+from currency_bots.place_order import get_balance
+from currency_bots.order_manager import (
+    enforce_open_order_limit, cancel_oldest_order, place_profitable_order,
+    ensure_min_orders_per_cycle, handle_self_buy, handle_profit_currency_buy, PROFIT_CURRENCIES
+)
 
 HIVE_NODES = ["https://api.hive.blog", "https://anyx.io"]
 TOKEN = "SWAP.HBD"
 DELAY = 1500
 
-def run_bot(username, active_key, profit_target=1.0, scalping_enabled=False):
+def run_bot(username, active_key, profit_target=1.0, scalping_enabled=False,
+            self_buy_enabled=True, profit_currency_enabled=False, profit_currency="PEK", profit_amount=0.00000001):
     print("\n==============================")
     print(f"[HBD BOT] Starting Smart Trade for {TOKEN}")
     rc_percent = get_resource_credits(username)
@@ -58,6 +63,9 @@ def run_bot(username, active_key, profit_target=1.0, scalping_enabled=False):
     elif duplicate_buy:
         print(f"[HBD BOT] Skipping BUY: Duplicate buy order at {buy_price} detected.")
     else:
+        enforce_open_order_limit(username, TOKEN, active_key=active_key)
+        cancel_oldest_order(username, active_key=active_key)
+        # ...centralized order logic for HBD bot...
         try:
             place_order(username, TOKEN, buy_price, buy_qty, order_type="buy", active_key=active_key, nodes=HIVE_NODES)
             print(f"[HBD BOT] BUY order submitted: {buy_qty} {TOKEN} at {buy_price}")

@@ -1,17 +1,22 @@
-from currency_bots.profit_strategies import choose_sell_price, get_profit_percent, scalping_strategy
+
 import time
 import datetime
 import json
 import os
 from currency_bots.fetch_market import get_orderbook_top, get_resource_credits, MIN_RESOURCE_CREDITS
-from currency_bots.place_order import place_order, get_open_orders, cancel_order, get_balance
+from currency_bots.place_order import get_balance
+from currency_bots.order_manager import (
+    enforce_open_order_limit, cancel_oldest_order, place_profitable_order,
+    ensure_min_orders_per_cycle, handle_self_buy, handle_profit_currency_buy, PROFIT_CURRENCIES
+)
 
 HIVE_NODES = ["https://api.hive.blog", "https://anyx.io"]
 TOKEN = "SWAP.ETH"
 TICK = 0.0000001
 DELAY = 1500  # 25 minutes in seconds
 
-def run_bot(username, active_key, profit_target=1.0, scalping_enabled=False):
+def run_bot(username, active_key, profit_target=1.0, scalping_enabled=False,
+            self_buy_enabled=True, profit_currency_enabled=False, profit_currency="PEK", profit_amount=0.00000001):
     print("\n==============================")
     print(f"[ETH BOT] Starting Smart Trade for {TOKEN}")
     rc_percent = get_resource_credits(username)
@@ -24,40 +29,9 @@ def run_bot(username, active_key, profit_target=1.0, scalping_enabled=False):
     else:
         print(f"[ETH BOT] Resource Credits: Unable to fetch.")
 
-    market = get_orderbook_top(TOKEN)
-    if not market:
-        print(f"[ETH BOT] Market fetch failed for {TOKEN}. Skipping this cycle.")
-        print("==============================\n")
-        time.sleep(2)
-        pek_market = get_orderbook_top("PEK")
-        pek_ask = float(pek_market.get("lowestAsk", 0)) if pek_market else 0
-        if pek_ask <= 0:
-            pek_ask = 0.00000001
-            print(f"[ETH BOT] PEK market ask unavailable, using fallback price {pek_ask}")
-        try:
-            place_order(username, "PEK", pek_ask, 0.00000001, order_type="buy", active_key=active_key, nodes=HIVE_NODES)
-            print(f"[ETH BOT] Bought 0.00000001 PEK at {pek_ask}")
-        except Exception as e:
-            print(f"[ETH BOT] PEK buy exception: {e}")
-        time.sleep(2)
-        return
-    print(f"[ETH BOT] Market fetch success for {TOKEN}.")
-    bid = float(market.get("highestBid", 0))
-    ask = float(market.get("lowestAsk", 0))
-    buy_price = round(bid, 8) if bid > 0 else 0
-    if scalping_enabled:
-        sell_price = scalping_strategy(buy_price, ask, tick=TICK, spread_ticks=2, precision=8)
-    else:
-        sell_price = choose_sell_price(buy_price, ask, profit_target, precision=8)
-    hive_balance = get_balance(username, "SWAP.HIVE")
-    eth_balance = get_balance(username, TOKEN)
-    buy_qty = round(hive_balance * 0.20 / buy_price, 8) if buy_price > 0 else 0
-    sell_qty = round(eth_balance * 0.20, 8)
-    print(f"[ETH BOT] Preparing BUY: {buy_qty} {TOKEN} at {buy_price}")
-    print(f"[ETH BOT] Trade cycle for {TOKEN} complete.")
-    print("==============================\n")
-    time.sleep(2)
-    # Buy PEK at 0.00000002 per cycle
+    enforce_open_order_limit(username, TOKEN, active_key=active_key)
+    cancel_oldest_order(username, active_key=active_key)
+    # ...centralized order logic for ETH bot...
     pek_market = get_orderbook_top("PEK")
     pek_ask = float(pek_market.get("lowestAsk", 0)) if pek_market else 0
     if pek_ask <= 0:
