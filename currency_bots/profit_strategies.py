@@ -1,3 +1,15 @@
+def scalping_strategy(buy_price, market_sell_price, tick=0.00000001, spread_ticks=2, precision=8):
+    """
+    Scalping logic: sets a sell price a few ticks above buy price for quick, small profits.
+    Example: If tick=0.00000001 and spread_ticks=2, sell at buy_price + 2*tick.
+    """
+    if buy_price <= 0:
+        return 0.0
+    sell_price = round(buy_price + tick * spread_ticks, precision)
+    # If market_sell_price is higher, use it for instant fill
+    if market_sell_price > sell_price:
+        return round(market_sell_price, precision)
+    return sell_price
 def calculate_min_sell_price(buy_price, min_profit_percent=0.02):
     """Calculate the minimum sell price to achieve desired profit percent (default 2%)."""
     return round(buy_price * (1 + min_profit_percent), 8)

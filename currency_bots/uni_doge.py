@@ -1,4 +1,4 @@
-from currency_bots.profit_strategies import choose_sell_price, get_profit_percent
+from currency_bots.profit_strategies import choose_sell_price, get_profit_percent, scalping_strategy
 import time
 import datetime
 import json
@@ -11,7 +11,7 @@ TOKEN = "SWAP.DOGE"
 TICK = 0.0000001
 DELAY = 1500  # 25 minutes in seconds
 
-def run_bot(username, active_key, profit_target=1.0):
+def run_bot(username, active_key, profit_target=1.0, scalping_enabled=False):
     print("\n==============================")
     print(f"[DOGE BOT] Starting Smart Trade for {TOKEN}")
     rc_percent = get_resource_credits(username)
@@ -52,7 +52,10 @@ def run_bot(username, active_key, profit_target=1.0):
     except Exception:
         pass
     dynamic_profit_target = max(0.5, min(5.0, profit_target + (last_profit/10)))
-    sell_price = choose_sell_price(buy_price, ask, dynamic_profit_target, precision=8)
+    if scalping_enabled:
+        sell_price = scalping_strategy(buy_price, ask, tick=TICK, spread_ticks=2, precision=8)
+    else:
+        sell_price = choose_sell_price(buy_price, ask, dynamic_profit_target, precision=8)
     stop_loss = round(buy_price * 0.97, 8)  # 3% stop-loss
     hive_balance = get_balance(username, "SWAP.HIVE")
     doge_balance = get_balance(username, TOKEN)

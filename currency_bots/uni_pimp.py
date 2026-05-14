@@ -1,13 +1,13 @@
 import time
 from currency_bots.fetch_market import get_orderbook_top, get_resource_credits, MIN_RESOURCE_CREDITS
 from currency_bots.place_order import place_order, get_open_orders, get_balance
-from currency_bots.profit_strategies import choose_sell_price, get_profit_percent
+from currency_bots.profit_strategies import choose_sell_price, get_profit_percent, scalping_strategy
 
 TOKEN = "PIMP"
 HIVE_NODES = ["api.hive.blog", "anyx.io", "hive.roelandp.nl"]
 DELAY = 2
 
-def run_bot(username, active_key, profit_target=2.0):
+def run_bot(username, active_key, profit_target=2.0, scalping_enabled=False):
     print("\n==============================")
     print(f"[PIMP BOT] Starting Smart Trade for {TOKEN}")
     rc_percent = get_resource_credits(username)
@@ -49,7 +49,10 @@ def run_bot(username, active_key, profit_target=2.0):
     bid = float(market.get("highestBid", 0))
     ask = float(market.get("lowestAsk", 0))
     buy_price = round(bid, 8) if bid > 0 else 0
-    sell_price = choose_sell_price(buy_price, ask, profit_target, precision=8)
+    if scalping_enabled:
+        sell_price = scalping_strategy(buy_price, ask, tick=TICK, spread_ticks=2, precision=8)
+    else:
+        sell_price = choose_sell_price(buy_price, ask, profit_target, precision=8)
 
     hive_balance = get_balance(username, "SWAP.HIVE")
     pimp_balance = get_balance(username, TOKEN)

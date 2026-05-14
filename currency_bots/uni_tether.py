@@ -1,4 +1,4 @@
-from currency_bots.profit_strategies import choose_sell_price, get_profit_percent
+from currency_bots.profit_strategies import choose_sell_price, get_profit_percent, scalping_strategy
 import time
 from currency_bots.fetch_market import get_orderbook_top, get_resource_credits, MIN_RESOURCE_CREDITS
 from currency_bots.place_order import place_order, get_open_orders, get_balance
@@ -7,7 +7,7 @@ HIVE_NODES = ["https://api.hive.blog", "https://anyx.io"]
 TOKEN = "SWAP.USDT"
 DELAY = 1500
 
-def run_bot(username, active_key, profit_target=1.0):
+def run_bot(username, active_key, profit_target=1.0, scalping_enabled=False):
     print("\n==============================")
     print(f"[USDT BOT] Starting Smart Trade for {TOKEN}")
     rc_percent = get_resource_credits(username)
@@ -52,7 +52,11 @@ def run_bot(username, active_key, profit_target=1.0):
     bid = float(market.get("highestBid", 0))
     ask = float(market.get("lowestAsk", 0))
     buy_price = round(bid, 6) if bid > 0 else 0
-    sell_price = choose_sell_price(buy_price, ask, profit_target, precision=6)
+    if scalping_enabled:
+        # Use a tick size appropriate for USDT (6 decimals)
+        sell_price = scalping_strategy(buy_price, ask, tick=0.000001, spread_ticks=2, precision=6)
+    else:
+        sell_price = choose_sell_price(buy_price, ask, profit_target, precision=6)
     hive_balance = get_balance(username, "SWAP.HIVE")
     usdt_balance = get_balance(username, TOKEN)
     buy_qty = round(hive_balance * 0.20 / buy_price, 2) if buy_price > 0 else 0

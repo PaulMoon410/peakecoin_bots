@@ -1,4 +1,4 @@
-from currency_bots.profit_strategies import choose_sell_price, get_profit_percent
+from currency_bots.profit_strategies import choose_sell_price, get_profit_percent, scalping_strategy
 import time
 import datetime
 import json
@@ -11,7 +11,7 @@ TOKEN = "SWAP.BTC"
 TICK = 0.0000001
 DELAY = 1500  # 25 minutes in seconds
 
-def run_bot(username, active_key, profit_target=1.0):
+def run_bot(username, active_key, profit_target=1.0, scalping_enabled=False):
     print("\n==============================")
     print(f"[BTC BOT] Starting Smart Trade for {TOKEN}")
     rc_percent = get_resource_credits(username)
@@ -45,7 +45,10 @@ def run_bot(username, active_key, profit_target=1.0):
     bid = float(market.get("highestBid", 0))
     ask = float(market.get("lowestAsk", 0))
     buy_price = round(bid, 8) if bid > 0 else 0
-    sell_price = choose_sell_price(buy_price, ask, profit_target, precision=8)
+    if scalping_enabled:
+        sell_price = scalping_strategy(buy_price, ask, tick=TICK, spread_ticks=2, precision=8)
+    else:
+        sell_price = choose_sell_price(buy_price, ask, profit_target, precision=8)
     hive_balance = get_balance(username, "SWAP.HIVE")
     btc_balance = get_balance(username, TOKEN)
     buy_qty = round(hive_balance * 0.20 / buy_price, 8) if buy_price > 0 else 0

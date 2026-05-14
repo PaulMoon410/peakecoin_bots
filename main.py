@@ -91,6 +91,7 @@ class PlugAndPlayBotGUI(tk.Tk):
         self.keys_frame = tk.LabelFrame(form, text="Active Keys", bg="#f7f8fb", fg="#111827", padx=10, pady=8)
         self.keys_frame.pack(fill=tk.X, pady=(0, 10))
 
+
         profit_box = tk.LabelFrame(form, text="Profit Strategy", bg="#f7f8fb", fg="#111827", padx=10, pady=8)
         profit_box.pack(fill=tk.X)
 
@@ -126,6 +127,18 @@ class PlugAndPlayBotGUI(tk.Tk):
             font=("Segoe UI", 9),
         )
         self.guarantee_label.pack(anchor="w", pady=(4, 0))
+
+        # Scalping logic option
+        self.scalping_var = tk.BooleanVar(value=False)
+        self.scalping_check = tk.Checkbutton(
+            profit_box,
+            text="Enable Scalping Logic (buy/sell small quantities at close range)",
+            variable=self.scalping_var,
+            bg="#f7f8fb",
+            fg="#0ea5e9",
+            font=("Segoe UI", 10),
+        )
+        self.scalping_check.pack(anchor="w", pady=(8, 0))
 
         mode_frame = tk.Frame(form, bg="#f7f8fb")
         mode_frame.pack(fill=tk.X, pady=(10, 6))
@@ -316,6 +329,7 @@ class PlugAndPlayBotGUI(tk.Tk):
         selected = [c for c, v in self.currency_vars.items() if v.get()]
         keys = {c: self.key_entries[c].get().strip() for c in selected if c in self.key_entries}
         profit_target = self.profit_var.get()
+        scalping_enabled = self.scalping_var.get()
 
         if not username:
             messagebox.showerror("Error", "Please enter your username.")
@@ -335,6 +349,7 @@ class PlugAndPlayBotGUI(tk.Tk):
             "selected": selected,
             "keys": keys,
             "profit_target": profit_target,
+            "scalping_enabled": scalping_enabled,
         }
 
     def _load_bot_module(self, currency):
@@ -395,7 +410,7 @@ class PlugAndPlayBotGUI(tk.Tk):
         else:
             self.currency_profit_var.set("Per-currency: n/a")
 
-    def _run_bot_cycle(self, bot_module, currency, username, active_key, profit_target):
+    def _run_bot_cycle(self, bot_module, currency, username, active_key, profit_target, scalping_enabled=False):
         class _UILogWriter:
             def __init__(self, outer, bot_currency):
                 self.outer = outer
@@ -425,9 +440,13 @@ class PlugAndPlayBotGUI(tk.Tk):
 
         with contextlib.redirect_stdout(writer), contextlib.redirect_stderr(writer):
             try:
-                bot_module.run_bot(username, active_key, profit_target)
+                bot_module.run_bot(username, active_key, profit_target, scalping_enabled=scalping_enabled)
             except TypeError:
-                bot_module.run_bot(username, active_key)
+                # Fallback for bots that don't accept scalping_enabled yet
+                try:
+                    bot_module.run_bot(username, active_key, profit_target)
+                except TypeError:
+                    bot_module.run_bot(username, active_key)
             except Exception as exc:
                 self.log_message(f"[{currency}] Bot runtime exception: {exc}")
                 tb = traceback.format_exc().strip()
@@ -452,7 +471,7 @@ class PlugAndPlayBotGUI(tk.Tk):
         cycle_seconds = time.time() - cycle_started
         self.log_message(f"[{currency}] Cycle finished in {cycle_seconds:.1f}s")
 
-    def run_bot_continuous(self, currency, username, active_key, profit_target):
+    def run_bot_continuous(self, currency, username, active_key, profit_target, scalping_enabled=False):
         try:
             bot_module = self._load_bot_module(currency)
             self.log_message(f"🚀 Starting {currency} bot (continuous)")
@@ -465,7 +484,7 @@ class PlugAndPlayBotGUI(tk.Tk):
             cycle_count += 1
             self.log_message(f"🔄 {currency} cycle #{cycle_count}")
             try:
-                self._run_bot_cycle(bot_module, currency, username, active_key, profit_target)
+                self._run_bot_cycle(bot_module, currency, username, active_key, profit_target, scalping_enabled)
             except Exception as exc:
                 self.log_message(f"⚠️ {currency} cycle error: {exc}")
 
@@ -474,11 +493,11 @@ class PlugAndPlayBotGUI(tk.Tk):
 
         self.log_message(f"🛑 {currency} stopped after {cycle_count} cycles")
 
-    def run_bot_once(self, currency, username, active_key, profit_target):
+    def run_bot_once(self, currency, username, active_key, profit_target, scalping_enabled=False):
         try:
             bot_module = self._load_bot_module(currency)
             self.log_message(f"▶️ Running {currency} once")
-            self._run_bot_cycle(bot_module, currency, username, active_key, profit_target)
+            self._run_bot_cycle(bot_module, currency, username, active_key, profit_target, scalping_enabled)
             self.log_message(f"✅ {currency} completed")
         except Exception as exc:
             self.log_message(f"❌ {currency} failed: {exc}")
@@ -489,6 +508,7 @@ class PlugAndPlayBotGUI(tk.Tk):
             return
 
         self.log_message(f"🛡️ Guaranteed-profit mode active at {data['profit_target']:.1f}% target.")
+        scalping_enabled = data.get('scalping_enabled', False)
 
         if self.mode_var.get() == "continuous":
             self.log_message(f"Starting {len(data['selected'])} bot(s) in continuous mode")
@@ -496,7 +516,7 @@ class PlugAndPlayBotGUI(tk.Tk):
                 self.running_bots[currency] = True
                 thread = threading.Thread(
                     target=self.run_bot_continuous,
-                    args=(currency, data["username"], data["keys"][currency], data["profit_target"]),
+                    args=(currency, data["username"], data["keys"][currency], data["profit_target"], scalping_enabled),
                     daemon=True,
                 )
                 thread.start()
@@ -509,7 +529,7 @@ class PlugAndPlayBotGUI(tk.Tk):
             for currency in data["selected"]:
                 thread = threading.Thread(
                     target=self.run_bot_once,
-                    args=(currency, data["username"], data["keys"][currency], data["profit_target"]),
+                    args=(currency, data["username"], data["keys"][currency], data["profit_target"], scalping_enabled),
                     daemon=True,
                 )
                 thread.start()

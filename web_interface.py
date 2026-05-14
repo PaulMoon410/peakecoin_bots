@@ -99,6 +99,10 @@ class BotWebInterface(SimpleHTTPRequestHandler):
         </div>
         <div class='section'>
             <h3>Available Currency Bots</h3>
+            <div style="margin-bottom:10px;text-align:left;">
+                <input type="checkbox" id="scalpingToggle" style="transform:scale(1.2);margin-right:8px;">
+                <label for="scalpingToggle" style="font-weight:600;color:#0ea5e9;">Enable Scalping Logic (buy/sell small quantities at close range)</label>
+            </div>
             <div class='currency-list' id='botList'>
                 <div class='currency-item'>BTC <button onclick="startBot('BTC')">Start</button> <button onclick="stopBot('BTC')">Stop</button></div>
                 <div class='currency-item'>ETH <button onclick="startBot('ETH')">Start</button> <button onclick="stopBot('ETH')">Stop</button></div>
@@ -170,7 +174,9 @@ class BotWebInterface(SimpleHTTPRequestHandler):
     updateTime();
     setInterval(updateTime, 1000);
     function startBot(bot) {
-        logMsg('Starting ' + bot + ' bot... (API integration needed)');
+        var scalping = document.getElementById('scalpingToggle').checked;
+        logMsg('Starting ' + bot + ' bot... Scalping: ' + (scalping ? 'ENABLED' : 'DISABLED') + ' (API integration needed)');
+        // TODO: Send scalping option to backend when API is implemented
     }
     function stopBot(bot) {
         logMsg('Stopping ' + bot + ' bot... (API integration needed)');
