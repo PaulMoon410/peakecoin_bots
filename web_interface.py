@@ -46,6 +46,22 @@ class BotWebInterface(SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
             return
 
+        # Handle bot start with scalping option
+        if self.path.startswith('/start_bot'):
+            from urllib.parse import urlparse, parse_qs
+            query = urlparse(self.path).query
+            params = parse_qs(query)
+            bot = params.get('bot', [''])[0]
+            scalping = params.get('scalping', ['false'])[0].lower() == 'true'
+            # Here you would start the bot with the scalping option
+            print(f"[WEB] Start bot: {bot}, Scalping: {scalping}")
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self._send_common_headers()
+            self.end_headers()
+            self.wfile.write(json.dumps({'status': 'started', 'bot': bot, 'scalping': scalping}).encode())
+            return
+
         if self.path == '/':
             self.send_response(200)
             self.send_header('Content-type', 'text/html')
@@ -175,8 +191,16 @@ class BotWebInterface(SimpleHTTPRequestHandler):
     setInterval(updateTime, 1000);
     function startBot(bot) {
         var scalping = document.getElementById('scalpingToggle').checked;
-        logMsg('Starting ' + bot + ' bot... Scalping: ' + (scalping ? 'ENABLED' : 'DISABLED') + ' (API integration needed)');
-        // TODO: Send scalping option to backend when API is implemented
+        logMsg('Starting ' + bot + ' bot... Scalping: ' + (scalping ? 'ENABLED' : 'DISABLED'));
+        // Send scalping option to backend
+        fetch(`/start_bot?bot=${encodeURIComponent(bot)}&scalping=${scalping}`)
+            .then(response => response.json())
+            .then(data => {
+                logMsg('Backend: ' + JSON.stringify(data));
+            })
+            .catch(err => {
+                logMsg('Backend error: ' + err);
+            });
     }
     function stopBot(bot) {
         logMsg('Stopping ' + bot + ' bot... (API integration needed)');
