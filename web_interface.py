@@ -33,15 +33,17 @@ class BotWebInterface(SimpleHTTPRequestHandler):
         supplied_key = self.headers.get('X-API-Key', '')
         return supplied_key == WEB_API_KEY
 
+    VERSION = "0.00000001"  # Update this on each webpage update
     def do_GET(self):
         if REQUIRE_HTTPS and not self._is_https_request():
             self._redirect_to_https()
-            return
-
-        if not self._authorize_request():
-            self.send_response(401)
-            self.send_header('Content-type', 'application/json')
-            self._send_common_headers()
+            versioned_path = f"/index_v{self.VERSION}.html"
+            if self.path == '/' or self.path == versioned_path:
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html')
+                self._send_common_headers()
+                self.end_headers()
+                html_content = f"""
             self.end_headers()
             self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
             return
@@ -153,9 +155,12 @@ class BotWebInterface(SimpleHTTPRequestHandler):
     <script>
     function hiveKeychainLogin() {
         document.getElementById('keychainStatus').textContent = '';
+        var username = document.getElementById('manualUsername').value.trim();
+        if (!username) {
+            document.getElementById('keychainStatus').textContent = '❌ Please enter your Hive username above first.';
+            return;
+        }
         if (window.hive_keychain) {
-            var username = prompt('Enter your Hive username:');
-            if (!username) return;
             window.hive_keychain.requestSignBuffer(username, 'Login to PeakeCoin Bot Dashboard', 'Posting', function(response) {
                 if (response.success) {
                     document.getElementById('keychainStatus').textContent = '✅ Logged in as ' + username;
@@ -216,7 +221,13 @@ class BotWebInterface(SimpleHTTPRequestHandler):
             """
             self.wfile.write(html_content.encode())
         else:
-            super().do_GET()
+            # Redirect to the latest versioned HTML if root is accessed
+            if self.path == '/':
+                self.send_response(302)
+                self.send_header('Location', versioned_path)
+                self.end_headers()
+            else:
+                super().do_GET()
 
 def start_web_server(port=8080):
     """Start the web interface server"""
