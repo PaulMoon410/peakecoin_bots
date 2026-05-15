@@ -279,5 +279,7 @@ def start_web_server(port=8080):
 
 if __name__ == "__main__":
     import sys
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else SERVER_PORT
+    port = int(os.environ.get("PORT", 0))
+    if not port:
+        port = int(sys.argv[1]) if len(sys.argv) > 1 else SERVER_PORT
     start_web_server(port)
