@@ -61,68 +61,68 @@ class BotWebInterface(SimpleHTTPRequestHandler):
             self._send_common_headers()
             self.end_headers()
             html_content = """
-<!DOCTYPE html>
-<html lang='en'>
-<head>
-    <meta charset='UTF-8'>
-    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-    <title>PeakeCoin Bot Dashboard</title>
-    <link href='https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap' rel='stylesheet'>
-    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'>
-    <style>
-        body { font-family: 'Inter', Arial, sans-serif; background: linear-gradient(120deg, #0f172a 0%, #0ea5e9 100%); min-height: 100vh; margin: 0; }
-        .container { max-width: 700px; margin: 40px auto; background: rgba(30,41,59,0.8); border-radius: 18px; box-shadow: 0 12px 48px rgba(14,165,233,0.18), 0 2px 8px rgba(0,0,0,0.12); padding: 40px 32px 32px 32px; text-align: center; color: #fff; }
-        h1 { font-size: 2.2em; margin-bottom: 0.15em; font-weight: 900; background: linear-gradient(90deg, #38bdf8 0%, #fbbf24 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .section { margin: 22px 0; padding: 18px; background: rgba(255,255,255,0.05); border-radius: 10px; }
-        .status { padding: 10px; border-radius: 5px; margin: 10px 0; font-weight: 600; }
-        .running { background-color: #22c55e33; color: #22c55e; }
-        .stopped { background-color: #ef444433; color: #ef4444; }
-        button { background-color: #0ea5e9; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; font-weight: 600; }
-        button:hover { background-color: #0369a1; }
-        .currency-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 10px 0; }
-        .currency-item { padding: 10px; background-color: #334155; border-radius: 5px; text-align: center; font-weight: 600; }
-        .log-area { background-color: #0f172a; padding: 15px; border-radius: 5px; height: 180px; overflow-y: scroll; font-family: monospace; font-size: 13px; color: #fbbf24; text-align: left; }
-    </style>
-</head>
-<body>
-    <div class='container'>
-        <div class='section'>
-            <h3>Login Options</h3>
-            <div style="margin-bottom: 12px;">
-                <button id="keychainLoginBtn" onclick="hiveKeychainLogin()">Login with Hive Keychain</button>
-                <div id="keychainStatus" style="margin-top:10px;"></div>
-            </div>
-            <div style="margin-bottom: 8px;">
-                <input type="text" id="manualUsername" placeholder="Hive username" style="padding:6px; border-radius:4px; border:1px solid #ccc; width:140px;">
-                <input type="password" id="manualActiveKey" placeholder="Active key" style="padding:6px; border-radius:4px; border:1px solid #ccc; width:220px;">
-                <button onclick="manualLogin()">Manual Login</button>
-            </div>
-            <div id="manualLoginStatus" style="margin-top:8px;"></div>
-        </div>
-        <h1>🚀 PeakeCoin Bot Dashboard</h1>
-        <div class='section'>
-            <h3>Server Status</h3>
-            <div class='status running'>✅ Server is running</div>
-            <div>Server Time: <span id='serverTime'></span></div>
-            <div>Bot Version: v1.0</div>
-        </div>
-        <div class='section'>
-            <h3>Available Currency Bots</h3>
-            <div style="margin-bottom:10px;text-align:left;">
-                <input type="checkbox" id="scalpingToggle" style="transform:scale(1.2);margin-right:8px;">
-                <label for="scalpingToggle" style="font-weight:600;color:#0ea5e9;">Enable Scalping Logic (buy/sell small quantities at close range)</label>
-            </div>
-            <div class='currency-list' id='botList'>
-                <div class='currency-item'>BTC <button onclick="startBot('BTC')">Start</button> <button onclick="stopBot('BTC')">Stop</button></div>
-                <div class='currency-item'>ETH <button onclick="startBot('ETH')">Start</button> <button onclick="stopBot('ETH')">Stop</button></div>
-                <div class='currency-item'>DOGE <button onclick="startBot('DOGE')">Start</button> <button onclick="stopBot('DOGE')">Stop</button></div>
-                <div class='currency-item'>LTC <button onclick="startBot('LTC')">Start</button> <button onclick="stopBot('LTC')">Stop</button></div>
-                <div class='currency-item'>TETHER <button onclick="startBot('TETHER')">Start</button> <button onclick="stopBot('TETHER')">Stop</button></div>
-                <div class='currency-item'>HBD <button onclick="startBot('HBD')">Start</button> <button onclick="stopBot('HBD')">Stop</button></div>
-                <div class='currency-item'>BLURT <button onclick="startBot('BLURT')">Start</button> <button onclick="stopBot('BLURT')">Stop</button></div>
-            </div>
-        </div>
-        <div class='section'>
+            <!DOCTYPE html>
+            <html lang='en'>
+            <head>
+                <meta charset='UTF-8'>
+                <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                <title>PeakeCoin Bot Dashboard</title>
+                <link href='https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap' rel='stylesheet'>
+                <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'>
+                <style>
+                    body { font-family: 'Inter', Arial, sans-serif; background: linear-gradient(120deg, #0f172a 0%, #0ea5e9 100%); min-height: 100vh; margin: 0; }
+                    .container { max-width: 700px; margin: 40px auto; background: rgba(30,41,59,0.8); border-radius: 18px; box-shadow: 0 12px 48px rgba(14,165,233,0.18), 0 2px 8px rgba(0,0,0,0.12); padding: 40px 32px 32px 32px; text-align: center; color: #fff; }
+                    h1 { font-size: 2.2em; margin-bottom: 0.15em; font-weight: 900; background: linear-gradient(90deg, #38bdf8 0%, #fbbf24 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+                    .section { margin: 22px 0; padding: 18px; background: rgba(255,255,255,0.05); border-radius: 10px; }
+                    .status { padding: 10px; border-radius: 5px; margin: 10px 0; font-weight: 600; }
+                    .running { background-color: #22c55e33; color: #22c55e; }
+                    .stopped { background-color: #ef444433; color: #ef4444; }
+                    button { background-color: #0ea5e9; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; font-weight: 600; }
+                    button:hover { background-color: #0369a1; }
+                    .currency-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 10px 0; }
+                    .currency-item { padding: 10px; background-color: #334155; border-radius: 5px; text-align: center; font-weight: 600; }
+                    .log-area { background-color: #0f172a; padding: 15px; border-radius: 5px; height: 180px; overflow-y: scroll; font-family: monospace; font-size: 13px; color: #fbbf24; text-align: left; }
+                </style>
+            </head>
+            <body>
+                <div class='container'>
+                    <div class='section'>
+                        <h3>Login Options</h3>
+                        <div style="margin-bottom: 12px;">
+                            <button id="keychainLoginBtn" onclick="hiveKeychainLogin()">Login with Hive Keychain</button>
+                            <div id="keychainStatus" style="margin-top:10px;"></div>
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <input type="text" id="manualUsername" placeholder="Hive username" style="padding:6px; border-radius:4px; border:1px solid #ccc; width:140px;">
+                            <input type="password" id="manualActiveKey" placeholder="Active key" style="padding:6px; border-radius:4px; border:1px solid #ccc; width:220px;">
+                            <button onclick="manualLogin()">Manual Login</button>
+                        </div>
+                        <div id="manualLoginStatus" style="margin-top:8px;"></div>
+                    </div>
+                    <h1>🚀 PeakeCoin Bot Dashboard</h1>
+                    <div class='section'>
+                        <h3>Server Status</h3>
+                        <div class='status running'>✅ Server is running</div>
+                        <div>Server Time: <span id='serverTime'></span></div>
+                        <div>Bot Version: v1.0</div>
+                    </div>
+                    <div class='section'>
+                        <h3>Available Currency Bots</h3>
+                        <div style="margin-bottom:10px;text-align:left;">
+                            <input type="checkbox" id="scalpingToggle" style="transform:scale(1.2);margin-right:8px;">
+                            <label for="scalpingToggle" style="font-weight:600;color:#0ea5e9;">Enable Scalping Logic (buy/sell small quantities at close range)</label>
+                        </div>
+                        <div class='currency-list' id='botList'>
+                            <div class='currency-item'>BTC <button onclick="startBot('BTC')">Start</button> <button onclick="stopBot('BTC')">Stop</button></div>
+                            <div class='currency-item'>ETH <button onclick="startBot('ETH')">Start</button> <button onclick="stopBot('ETH')">Stop</button></div>
+                            <div class='currency-item'>DOGE <button onclick="startBot('DOGE')">Start</button> <button onclick="stopBot('DOGE')">Stop</button></div>
+                            <div class='currency-item'>LTC <button onclick="startBot('LTC')">Start</button> <button onclick="stopBot('LTC')">Stop</button></div>
+                            <div class='currency-item'>TETHER <button onclick="startBot('TETHER')">Start</button> <button onclick="stopBot('TETHER')">Stop</button></div>
+                            <div class='currency-item'>HBD <button onclick="startBot('HBD')">Start</button> <button onclick="stopBot('HBD')">Stop</button></div>
+                            <div class='currency-item'>BLURT <button onclick="startBot('BLURT')">Start</button> <button onclick="stopBot('BLURT')">Stop</button></div>
+                        </div>
+                    </div>
+                    <div class='section'>
             <h3>Bot Logs</h3>
             <div class='log-area' id='logArea'>Waiting for logs...</div>
         </div>
@@ -148,48 +148,6 @@ class BotWebInterface(SimpleHTTPRequestHandler):
         document.getElementById('keychainStatus').textContent = '';
         var username = document.getElementById('manualUsername').value.trim();
         if (!username) {
-            document.getElementById('keychainStatus').textContent = '❌ Please enter your Hive username above first.';
-        }
-        // ...existing JavaScript code for login and bot logic...
-    }
-    </script>
-</body>
-</html>
-"""
-            self.wfile.write(html_content.encode())
-                <div class='currency-item'>LTC <button onclick="startBot('LTC')">Start</button> <button onclick="stopBot('LTC')">Stop</button></div>
-                <div class='currency-item'>TETHER <button onclick="startBot('TETHER')">Start</button> <button onclick="stopBot('TETHER')">Stop</button></div>
-                <div class='currency-item'>HBD <button onclick="startBot('HBD')">Start</button> <button onclick="stopBot('HBD')">Stop</button></div>
-                <div class='currency-item'>BLURT <button onclick="startBot('BLURT')">Start</button> <button onclick="stopBot('BLURT')">Stop</button></div>
-            </div>
-        </div>
-        <div class='section'>
-            <h3>Bot Logs</h3>
-            <div class='log-area' id='logArea'>Waiting for logs...</div>
-        </div>
-        <div class='section'>
-            <h3>How to Use</h3>
-            <ol style='text-align:left;'>
-                <li><strong>Command Line:</strong> Run <code>python peake_droid.py</code> in the server terminal</li>
-                <li><strong>Desktop GUI:</strong> Run <code>python main.py</code> (requires desktop environment)</li>
-                <li><strong>Background Service:</strong> Use screen, tmux, or systemd for production</li>
-            </ol>
-        </div>
-        <div class='section'>
-            <h3>Support</h3>
-            <p>For help and support, join the PeakeCoin community or refer to the documentation files:</p>
-            <ul style='text-align:left;'>
-                <li>README.md - Basic usage guide</li>
-                <li>SERVER_DEPLOYMENT.md - Server setup guide</li>
-            </ul>
-        </div>
-    </div>
-    <script>
-    function hiveKeychainLogin() {
-        document.getElementById('keychainStatus').textContent = '';
-        var username = document.getElementById('manualUsername').value.trim();
-        if (!username) {
-                # Removed HTML/JS content after the HTML string
             document.getElementById('keychainStatus').textContent = '❌ Please enter your Hive username above first.';
             return;
         }
