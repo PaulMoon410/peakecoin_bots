@@ -132,6 +132,7 @@ class BotWebInterface(SimpleHTTPRequestHandler):
 """
             html_content = html_content.replace("__VERSION__", self.VERSION)
             self.wfile.write(html_content.encode())
+            return
             <h3>Bot Logs</h3>
             <div class='log-area' id='logArea'>Waiting for logs...</div>
         </div>
