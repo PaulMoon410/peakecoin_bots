@@ -152,18 +152,33 @@ class BotWebInterface(SimpleHTTPRequestHandler):
             </ul>
         </div>
     </div>
+
     <script>
-        // Simulate status checks (replace with real API calls as needed)
-        window.addEventListener('DOMContentLoaded', function() {
-            // Simulate Python Engine status
-            setTimeout(function() {
-                document.getElementById('pythonStatus').textContent = 'Online';
-            }, 1000);
-            // Simulate Node Server status
-            setTimeout(function() {
-                document.getElementById('nodeStatus').textContent = 'Connected';
-            }, 1200);
-        });
+    // Simulate status checks (replace with real API calls as needed)
+    window.addEventListener('DOMContentLoaded', function() {
+        // Simulate Python Engine status
+        setTimeout(function() {
+            document.getElementById('pythonStatus').textContent = 'Online';
+        }, 1000);
+        // Simulate Node Server status
+        setTimeout(function() {
+            document.getElementById('nodeStatus').textContent = 'Connected';
+        }, 1200);
+
+        // Debug output for Hive Keychain detection, protocol, and CSP
+        var debug = [];
+        debug.push('Protocol: ' + window.location.protocol);
+        debug.push('window.hive_keychain: ' + (typeof window.hive_keychain !== 'undefined'));
+        // Try to read CSP header via meta tag (not always possible)
+        var csp = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+        if (csp) {
+            debug.push('CSP meta: ' + csp.getAttribute('content'));
+        } else {
+            debug.push('CSP meta: not present');
+        }
+        document.getElementById('keychainDebug').textContent = debug.join(' | ');
+    });
+
     function hiveKeychainLogin() {
         document.getElementById('keychainStatus').textContent = '';
         var username = document.getElementById('manualUsername').value.trim();
@@ -182,22 +197,6 @@ class BotWebInterface(SimpleHTTPRequestHandler):
         } else {
             document.getElementById('keychainStatus').textContent = '❌ Hive Keychain extension not detected.';
         }
-    }
-
-    // Debug output for Hive Keychain detection, protocol, and CSP
-    window.addEventListener('DOMContentLoaded', function() {
-        var debug = [];
-        debug.push('Protocol: ' + window.location.protocol);
-        debug.push('window.hive_keychain: ' + (typeof window.hive_keychain !== 'undefined'));
-        // Try to read CSP header via meta tag (not always possible)
-        var csp = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
-        if (csp) {
-            debug.push('CSP meta: ' + csp.getAttribute('content'));
-        } else {
-            debug.push('CSP meta: not present');
-        }
-        document.getElementById('keychainDebug').textContent = debug.join(' | ');
-    });
     }
 
     function manualLogin() {
