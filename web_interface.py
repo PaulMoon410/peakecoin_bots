@@ -89,8 +89,6 @@ class BotWebInterface(SimpleHTTPRequestHandler):
         <div class='section'>
             <h3>Login Options</h3>
             <div style="margin-bottom: 12px;">
-"""
-            self.wfile.write(html_content.encode())
                 <button id="keychainLoginBtn" onclick="hiveKeychainLogin()">Login with Hive Keychain</button>
                 <div id="keychainStatus" style="margin-top:10px;"></div>
             </div>
@@ -118,6 +116,15 @@ class BotWebInterface(SimpleHTTPRequestHandler):
                 <div class='currency-item'>BTC <button onclick="startBot('BTC')">Start</button> <button onclick="stopBot('BTC')">Stop</button></div>
                 <div class='currency-item'>ETH <button onclick="startBot('ETH')">Start</button> <button onclick="stopBot('ETH')">Stop</button></div>
                 <div class='currency-item'>DOGE <button onclick="startBot('DOGE')">Start</button> <button onclick="stopBot('DOGE')">Stop</button></div>
+                <!-- ...existing code for other currencies and the rest of the HTML... -->
+            </div>
+        </div>
+        <!-- ...existing code for the rest of the HTML and scripts... -->
+    </div>
+</body>
+</html>
+"""
+            self.wfile.write(html_content.encode())
                 <div class='currency-item'>LTC <button onclick="startBot('LTC')">Start</button> <button onclick="stopBot('LTC')">Stop</button></div>
                 <div class='currency-item'>TETHER <button onclick="startBot('TETHER')">Start</button> <button onclick="stopBot('TETHER')">Stop</button></div>
                 <div class='currency-item'>HBD <button onclick="startBot('HBD')">Start</button> <button onclick="stopBot('HBD')">Stop</button></div>
