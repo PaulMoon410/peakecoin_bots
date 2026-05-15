@@ -37,15 +37,6 @@ class BotWebInterface(SimpleHTTPRequestHandler):
     def do_GET(self):
         if REQUIRE_HTTPS and not self._is_https_request():
             self._redirect_to_https()
-            versioned_path = f"/index_v{self.VERSION}.html"
-            if self.path == '/' or self.path == versioned_path:
-                self.send_response(200)
-                self.send_header('Content-type', 'text/html')
-                self._send_common_headers()
-                self.end_headers()
-                html_content = f"""
-            self.end_headers()
-            self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
             return
 
         # Handle bot start with scalping option
@@ -98,6 +89,8 @@ class BotWebInterface(SimpleHTTPRequestHandler):
         <div class='section'>
             <h3>Login Options</h3>
             <div style="margin-bottom: 12px;">
+"""
+            self.wfile.write(html_content.encode())
                 <button id="keychainLoginBtn" onclick="hiveKeychainLogin()">Login with Hive Keychain</button>
                 <div id="keychainStatus" style="margin-top:10px;"></div>
             </div>
