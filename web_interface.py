@@ -106,6 +106,11 @@ class BotWebInterface(SimpleHTTPRequestHandler):
                         <div class='status running'>✅ Server is running</div>
                         <div>Server Time: <span id='serverTime'></span></div>
                         <div>Bot Version: v1.0</div>
+                        <div id="statusDetails" style="margin-top:10px;text-align:left;font-size:15px;">
+                            <div>Storage: <span id="storageStatus">PeakeCoin Servers</span></div>
+                            <div>Python Engine: <span id="pythonStatus">Checking...</span></div>
+                            <div>Node Server: <span id="nodeStatus">Checking...</span></div>
+                        </div>
                     </div>
                     <div class='section'>
                         <h3>Available Currency Bots</h3>
@@ -148,6 +153,17 @@ class BotWebInterface(SimpleHTTPRequestHandler):
         </div>
     </div>
     <script>
+        // Simulate status checks (replace with real API calls as needed)
+        window.addEventListener('DOMContentLoaded', function() {
+            // Simulate Python Engine status
+            setTimeout(function() {
+                document.getElementById('pythonStatus').textContent = 'Online';
+            }, 1000);
+            // Simulate Node Server status
+            setTimeout(function() {
+                document.getElementById('nodeStatus').textContent = 'Connected';
+            }, 1200);
+        });
     function hiveKeychainLogin() {
         document.getElementById('keychainStatus').textContent = '';
         var username = document.getElementById('manualUsername').value.trim();
