@@ -116,11 +116,43 @@ class BotWebInterface(SimpleHTTPRequestHandler):
                 <div class='currency-item'>BTC <button onclick="startBot('BTC')">Start</button> <button onclick="stopBot('BTC')">Stop</button></div>
                 <div class='currency-item'>ETH <button onclick="startBot('ETH')">Start</button> <button onclick="stopBot('ETH')">Stop</button></div>
                 <div class='currency-item'>DOGE <button onclick="startBot('DOGE')">Start</button> <button onclick="stopBot('DOGE')">Stop</button></div>
-                <!-- ...existing code for other currencies and the rest of the HTML... -->
+                <div class='currency-item'>LTC <button onclick="startBot('LTC')">Start</button> <button onclick="stopBot('LTC')">Stop</button></div>
+                <div class='currency-item'>TETHER <button onclick="startBot('TETHER')">Start</button> <button onclick="stopBot('TETHER')">Stop</button></div>
+                <div class='currency-item'>HBD <button onclick="startBot('HBD')">Start</button> <button onclick="stopBot('HBD')">Stop</button></div>
+                <div class='currency-item'>BLURT <button onclick="startBot('BLURT')">Start</button> <button onclick="stopBot('BLURT')">Stop</button></div>
             </div>
         </div>
-        <!-- ...existing code for the rest of the HTML and scripts... -->
+        <div class='section'>
+            <h3>Bot Logs</h3>
+            <div class='log-area' id='logArea'>Waiting for logs...</div>
+        </div>
+        <div class='section'>
+            <h3>How to Use</h3>
+            <ol style='text-align:left;'>
+                <li><strong>Command Line:</strong> Run <code>python peake_droid.py</code> in the server terminal</li>
+                <li><strong>Desktop GUI:</strong> Run <code>python main.py</code> (requires desktop environment)</li>
+                <li><strong>Background Service:</strong> Use screen, tmux, or systemd for production</li>
+            </ol>
+        </div>
+        <div class='section'>
+            <h3>Support</h3>
+            <p>For help and support, join the PeakeCoin community or refer to the documentation files:</p>
+            <ul style='text-align:left;'>
+                <li>README.md - Basic usage guide</li>
+                <li>SERVER_DEPLOYMENT.md - Server setup guide</li>
+            </ul>
+        </div>
     </div>
+    <script>
+    function hiveKeychainLogin() {
+        document.getElementById('keychainStatus').textContent = '';
+        var username = document.getElementById('manualUsername').value.trim();
+        if (!username) {
+            document.getElementById('keychainStatus').textContent = '❌ Please enter your Hive username above first.';
+        }
+        // ...existing JavaScript code for login and bot logic...
+    }
+    </script>
 </body>
 </html>
 """
@@ -157,6 +189,7 @@ class BotWebInterface(SimpleHTTPRequestHandler):
         document.getElementById('keychainStatus').textContent = '';
         var username = document.getElementById('manualUsername').value.trim();
         if (!username) {
+                # Removed HTML/JS content after the HTML string
             document.getElementById('keychainStatus').textContent = '❌ Please enter your Hive username above first.';
             return;
         }
