@@ -91,6 +91,7 @@ class BotWebInterface(SimpleHTTPRequestHandler):
                         <div style="margin-bottom: 12px;">
                             <button id="keychainLoginBtn" onclick="hiveKeychainLogin()">Login with Hive Keychain</button>
                             <div id="keychainStatus" style="margin-top:10px;"></div>
+                            <div id="keychainDebug" style="margin-top:10px; color:#fbbf24; font-size:13px;"></div>
                         </div>
                         <div style="margin-bottom: 8px;">
                             <input type="text" id="manualUsername" placeholder="Hive username" style="padding:6px; border-radius:4px; border:1px solid #ccc; width:140px;">
@@ -162,6 +163,22 @@ class BotWebInterface(SimpleHTTPRequestHandler):
         } else {
             document.getElementById('keychainStatus').textContent = '❌ Hive Keychain extension not detected.';
         }
+    }
+
+    // Debug output for Hive Keychain detection, protocol, and CSP
+    window.addEventListener('DOMContentLoaded', function() {
+        var debug = [];
+        debug.push('Protocol: ' + window.location.protocol);
+        debug.push('window.hive_keychain: ' + (typeof window.hive_keychain !== 'undefined'));
+        // Try to read CSP header via meta tag (not always possible)
+        var csp = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+        if (csp) {
+            debug.push('CSP meta: ' + csp.getAttribute('content'));
+        } else {
+            debug.push('CSP meta: not present');
+        }
+        document.getElementById('keychainDebug').textContent = debug.join(' | ');
+    });
     }
 
     function manualLogin() {
