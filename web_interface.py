@@ -33,7 +33,7 @@ class BotWebInterface(SimpleHTTPRequestHandler):
         supplied_key = self.headers.get('X-API-Key', '')
         return supplied_key == WEB_API_KEY
 
-    VERSION = "0.00000004"  # Auto-incremented on each push
+    VERSION = "0.00000005"  # Auto-incremented on each push
     def do_GET(self):
         if REQUIRE_HTTPS and not self._is_https_request():
             self._redirect_to_https()
@@ -61,13 +61,39 @@ class BotWebInterface(SimpleHTTPRequestHandler):
             result = {'status': 'started', 'bot': bot, 'scalping': scalping}
             if script_path and os.path.exists(script_path):
                 def run_bot_script():
-                    # You can add more args as needed, e.g. scalping
                     try:
-                        subprocess.Popen([sys.executable, script_path])
+                        log_file = f"bot_{bot.lower()}.log"
+                        with open(log_file, "a") as lf:
+                            # Start the bot and redirect stdout/stderr to the log file
+                            subprocess.Popen([sys.executable, script_path], stdout=lf, stderr=lf)
                     except Exception as e:
                         print(f"[WEB] Failed to start bot script {script_path}: {e}")
                 threading.Thread(target=run_bot_script, daemon=True).start()
-                print(f"[WEB] Launched {script_path} for bot {bot}")
+                print(f"[WEB] Launched {script_path} for bot {bot}, logging to bot_{bot.lower()}.log")
+                    # Serve bot logs: /bot_log?bot=LTC
+                    if self.path.startswith('/bot_log'):
+                        from urllib.parse import urlparse, parse_qs
+                        query = urlparse(self.path).query
+                        params = parse_qs(query)
+                        bot = params.get('bot', [''])[0]
+                        log_file = f"bot_{bot.lower()}.log"
+                        log_content = ''
+                        if os.path.exists(log_file):
+                            try:
+                                with open(log_file, 'r') as lf:
+                                    # Only return the last 40 lines for brevity
+                                    lines = lf.readlines()[-40:]
+                                    log_content = ''.join(lines)
+                            except Exception as e:
+                                log_content = f"[Error reading log file: {e}]"
+                        else:
+                            log_content = f"No log file found for {bot}."
+                        self.send_response(200)
+                        self.send_header('Content-type', 'text/plain')
+                        self._send_common_headers()
+                        self.end_headers()
+                        self.wfile.write(log_content.encode())
+                        return
             else:
                 result['status'] = 'error'
                 result['error'] = f'Script not found for bot: {bot}'
@@ -158,6 +184,35 @@ class BotWebInterface(SimpleHTTPRequestHandler):
                         <div class='section'>
                             <h3>Bot Logs</h3>
                             <div class='log-area' id='logArea'>Waiting for logs...</div>
+                            <script>
+                            // Poll for bot logs every 3 seconds
+                            let currentBot = null;
+                            function fetchBotLog(bot) {
+                                currentBot = bot;
+                                fetch(`/bot_log?bot=${encodeURIComponent(bot)}`)
+                                    .then(response => response.text())
+                                    .then(text => {
+                                        document.getElementById('logArea').textContent = text || 'No logs yet.';
+                                    })
+                                    .catch(() => {
+                                        document.getElementById('logArea').textContent = 'Error fetching logs.';
+                                    });
+                            }
+                            // Patch startBot to also start log polling
+                            const origStartBot = window.startBot;
+                            window.startBot = function(bot) {
+                                origStartBot(bot);
+                                setTimeout(() => fetchBotLog(bot), 1000); // Wait a bit for log file to appear
+                                if (window.logInterval) clearInterval(window.logInterval);
+                                window.logInterval = setInterval(() => fetchBotLog(bot), 3000);
+                            };
+                            // Optionally, stop polling when stopBot is called
+                            const origStopBot = window.stopBot;
+                            window.stopBot = function(bot) {
+                                origStopBot(bot);
+                                if (window.logInterval) clearInterval(window.logInterval);
+                            };
+                            </script>
                         </div>
                         <div class='section'>
                             <h3>How to Use</h3>
