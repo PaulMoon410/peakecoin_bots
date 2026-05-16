@@ -166,7 +166,8 @@ class BotWebInterface(SimpleHTTPRequestHandler):
                         // Debug output for Hive Keychain detection, protocol, and CSP
                         var debug = [];
                         debug.push('Protocol: ' + window.location.protocol);
-                        debug.push('window.hive_keychain: ' + (typeof window.hive_keychain !== 'undefined'));
+                        var hasKeychain = (typeof window.hive_keychain !== 'undefined');
+                        debug.push('window.hive_keychain: ' + hasKeychain);
                         // Try to read CSP header via meta tag (not always possible)
                         var csp = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
                         if (csp) {
@@ -175,6 +176,16 @@ class BotWebInterface(SimpleHTTPRequestHandler):
                             debug.push('CSP meta: not present');
                         }
                         document.getElementById('keychainDebug').textContent = debug.join(' | ');
+                        // Disable button if extension not detected
+                        var btn = document.getElementById('keychainLoginBtn');
+                        if (!hasKeychain) {
+                            btn.disabled = true;
+                            btn.textContent = 'Hive Keychain Not Detected';
+                            document.getElementById('keychainStatus').textContent = '❌ Hive Keychain browser extension is not installed or enabled.';
+                        } else {
+                            btn.disabled = false;
+                            btn.textContent = 'Login with Hive Keychain';
+                        }
                     });
 
                     function hiveKeychainLogin() {
