@@ -33,7 +33,7 @@ class BotWebInterface(SimpleHTTPRequestHandler):
         supplied_key = self.headers.get('X-API-Key', '')
         return supplied_key == WEB_API_KEY
 
-    VERSION = "0.00000002"  # Auto-incremented on each push
+    VERSION = "0.00000003"  # Auto-incremented on each push
     def do_GET(self):
         if REQUIRE_HTTPS and not self._is_https_request():
             self._redirect_to_https()
@@ -90,6 +90,7 @@ class BotWebInterface(SimpleHTTPRequestHandler):
                         <h3>Login Options</h3>
                         <div style="margin-bottom: 12px;">
                             <button id="keychainLoginBtn" onclick="hiveKeychainLogin()">Login with Hive Keychain</button>
+                            <button id="recheckKeychainBtn" onclick="recheckKeychain()" style="margin-left:10px;">Re-check for Hive Keychain</button>
                             <div id="keychainStatus" style="margin-top:10px;"></div>
                             <div id="keychainDebug" style="margin-top:10px; color:#fbbf24; font-size:13px;"></div>
                         </div>
@@ -153,21 +154,12 @@ class BotWebInterface(SimpleHTTPRequestHandler):
                     </div>
                     <script>
                     // Simulate status checks (replace with real API calls as needed)
-                    window.addEventListener('DOMContentLoaded', function() {
-                        // Simulate Python Engine status
-                        setTimeout(function() {
-                            document.getElementById('pythonStatus').textContent = 'Online';
-                        }, 1000);
-                        // Simulate Node Server status
-                        setTimeout(function() {
-                            document.getElementById('nodeStatus').textContent = 'Connected';
-                        }, 1200);
-
-                        // Debug output for Hive Keychain detection, protocol, and CSP
+                    function checkKeychainExtension(showStatus) {
                         var debug = [];
                         debug.push('Protocol: ' + window.location.protocol);
                         var hasKeychain = (typeof window.hive_keychain !== 'undefined');
                         debug.push('window.hive_keychain: ' + hasKeychain);
+                        debug.push('window keys: ' + Object.keys(window).filter(k => k.toLowerCase().includes('keychain')).join(','));
                         // Try to read CSP header via meta tag (not always possible)
                         var csp = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
                         if (csp) {
@@ -181,11 +173,29 @@ class BotWebInterface(SimpleHTTPRequestHandler):
                         if (!hasKeychain) {
                             btn.disabled = true;
                             btn.textContent = 'Hive Keychain Not Detected';
-                            document.getElementById('keychainStatus').textContent = '❌ Hive Keychain browser extension is not installed or enabled.';
+                            if (showStatus) document.getElementById('keychainStatus').textContent = '❌ Hive Keychain browser extension is not installed or enabled.';
                         } else {
                             btn.disabled = false;
                             btn.textContent = 'Login with Hive Keychain';
+                            if (showStatus) document.getElementById('keychainStatus').textContent = '';
                         }
+                    }
+                    function recheckKeychain() {
+                        checkKeychainExtension(true);
+                    }
+                    window.addEventListener('DOMContentLoaded', function() {
+                        // Simulate Python Engine status
+                        setTimeout(function() {
+                            document.getElementById('pythonStatus').textContent = 'Online';
+                        }, 1000);
+                        // Simulate Node Server status
+                        setTimeout(function() {
+                            document.getElementById('nodeStatus').textContent = 'Connected';
+                        }, 1200);
+                        checkKeychainExtension(true);
+                        // Delayed re-check in case extension injects late
+                        setTimeout(function() { checkKeychainExtension(false); }, 1500);
+                        setTimeout(function() { checkKeychainExtension(false); }, 3000);
                     });
 
                     function hiveKeychainLogin() {
