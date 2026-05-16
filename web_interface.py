@@ -33,7 +33,7 @@ class BotWebInterface(SimpleHTTPRequestHandler):
         supplied_key = self.headers.get('X-API-Key', '')
         return supplied_key == WEB_API_KEY
 
-    VERSION = "0.00000001"  # Update this on each webpage update
+    VERSION = "0.00000002"  # Auto-incremented on each push
     def do_GET(self):
         if REQUIRE_HTTPS and not self._is_https_request():
             self._redirect_to_https()
