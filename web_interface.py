@@ -33,7 +33,7 @@ class BotWebInterface(SimpleHTTPRequestHandler):
         supplied_key = self.headers.get('X-API-Key', '')
         return supplied_key == WEB_API_KEY
 
-    VERSION = "0.00000008"  # Auto-incremented on each push
+    VERSION = "0.00000009"  # Auto-incremented on each push
     def do_GET(self):
         if REQUIRE_HTTPS and not self._is_https_request():
             self._redirect_to_https()
@@ -70,6 +70,14 @@ class BotWebInterface(SimpleHTTPRequestHandler):
                         print(f"[WEB] Failed to start bot script {script_path}: {e}")
                 threading.Thread(target=run_bot_script, daemon=True).start()
                 print(f"[WEB] Launched {script_path} for bot {bot}, logging to bot_{bot.lower()}.log")
+            else:
+                result = {'status': 'error', 'error': 'Invalid bot or script not found', 'bot': bot}
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self._send_common_headers()
+            self.end_headers()
+            self.wfile.write(json.dumps(result).encode())
+            return
 
         # Serve bot logs: /bot_log?bot=LTC
         if self.path.startswith('/bot_log'):
@@ -397,9 +405,17 @@ class BotWebInterface(SimpleHTTPRequestHandler):
                         logMsg(`Starting ${bot} bot... Scalping: ${scalping ? 'ENABLED' : 'DISABLED'}`);
                         // Send scalping option to backend
                         fetch(`/start_bot?bot=${encodeURIComponent(bot)}&scalping=${scalping}`)
-                            .then(response => response.json())
-                            .then(data => {
-                                logMsg(`Backend: ${JSON.stringify(data)}`);
+                            .then(response => {
+                                const ct = response.headers.get('content-type') || '';
+                                if (ct.includes('application/json')) {
+                                    return response.json().then(data => {
+                                        logMsg(`Backend: ${JSON.stringify(data)}`);
+                                    });
+                                } else {
+                                    return response.text().then(text => {
+                                        logMsg(`Backend (raw): ${text}`);
+                                    });
+                                }
                             })
                             .catch(err => {
                                 logMsg(`Backend error: ${err}`);
