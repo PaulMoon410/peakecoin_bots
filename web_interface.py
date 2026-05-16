@@ -33,7 +33,7 @@ class BotWebInterface(SimpleHTTPRequestHandler):
         supplied_key = self.headers.get('X-API-Key', '')
         return supplied_key == WEB_API_KEY
 
-    VERSION = "0.00000003"  # Auto-incremented on each push
+    VERSION = "0.00000004"  # Auto-incremented on each push
     def do_GET(self):
         if REQUIRE_HTTPS and not self._is_https_request():
             self._redirect_to_https()
@@ -42,17 +42,41 @@ class BotWebInterface(SimpleHTTPRequestHandler):
         # Handle bot start with scalping option
         if self.path.startswith('/start_bot'):
             from urllib.parse import urlparse, parse_qs
+            import sys
             query = urlparse(self.path).query
             params = parse_qs(query)
             bot = params.get('bot', [''])[0]
             scalping = params.get('scalping', ['false'])[0].lower() == 'true'
-            # Here you would start the bot with the scalping option
-            print(f"[WEB] Start bot: {bot}, Scalping: {scalping}")
+            # Map bot names to script paths
+            bot_scripts = {
+                'BTC': 'currency_bots/uni_btc.py',
+                'ETH': 'currency_bots/uni_eth.py',
+                'DOGE': 'currency_bots/uni_doge.py',
+                'LTC': 'currency_bots/uni_ltc.py',
+                'TETHER': 'currency_bots/uni_tether.py',
+                'HBD': 'currency_bots/uni_hbd.py',
+                'BLURT': 'currency_bots/uni_blurt.py',
+            }
+            script_path = bot_scripts.get(bot.upper())
+            result = {'status': 'started', 'bot': bot, 'scalping': scalping}
+            if script_path and os.path.exists(script_path):
+                def run_bot_script():
+                    # You can add more args as needed, e.g. scalping
+                    try:
+                        subprocess.Popen([sys.executable, script_path])
+                    except Exception as e:
+                        print(f"[WEB] Failed to start bot script {script_path}: {e}")
+                threading.Thread(target=run_bot_script, daemon=True).start()
+                print(f"[WEB] Launched {script_path} for bot {bot}")
+            else:
+                result['status'] = 'error'
+                result['error'] = f'Script not found for bot: {bot}'
+                print(f"[WEB] Script not found for bot: {bot}")
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self._send_common_headers()
             self.end_headers()
-            self.wfile.write(json.dumps({'status': 'started', 'bot': bot, 'scalping': scalping}).encode())
+            self.wfile.write(json.dumps(result).encode())
             return
 
         if self.path == '/':
