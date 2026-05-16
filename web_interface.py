@@ -192,19 +192,19 @@ class BotWebInterface(SimpleHTTPRequestHandler):
                         document.getElementById('keychainStatus').textContent = '';
                         var username = document.getElementById('manualUsername').value.trim();
                         if (!username) {
-                            document.getElementById('keychainStatus').textContent = '❌ Please enter your Hive username above first.';
+                            document.getElementById('keychainStatus').textContent = `❌ Please enter your Hive username above first.`;
                             return;
                         }
                         if (window.hive_keychain) {
-                            window.hive_keychain.requestSignBuffer(username, 'Login to PeakeCoin Bot Dashboard', 'Posting', function(response) {
+                            window.hive_keychain.requestSignBuffer(username, `Login to PeakeCoin Bot Dashboard`, 'Posting', function(response) {
                                 if (response.success) {
-                                    document.getElementById('keychainStatus').textContent = '✅ Logged in as ' + username;
+                                    document.getElementById('keychainStatus').textContent = `✅ Logged in as ${username}`;
                                 } else {
-                                    document.getElementById('keychainStatus').textContent = '❌ Login failed or cancelled.';
+                                    document.getElementById('keychainStatus').textContent = `❌ Login failed or cancelled.`;
                                 }
                             });
                         } else {
-                            document.getElementById('keychainStatus').textContent = '❌ Hive Keychain extension not detected.';
+                            document.getElementById('keychainStatus').textContent = `❌ Hive Keychain extension not detected.`;
                         }
                     }
 
@@ -213,15 +213,15 @@ class BotWebInterface(SimpleHTTPRequestHandler):
                         var username = document.getElementById('manualUsername').value.trim();
                         var key = document.getElementById('manualActiveKey').value.trim();
                         if (!username || !key) {
-                            document.getElementById('manualLoginStatus').textContent = '❌ Please enter both username and active key.';
+                            document.getElementById('manualLoginStatus').textContent = `❌ Please enter both username and active key.`;
                             return;
                         }
                         // Basic validation: active key should start with '5' and be 51 chars
                         if (!/^5[HJK][1-9A-Za-z]{49}$/.test(key)) {
-                            document.getElementById('manualLoginStatus').textContent = '❌ Invalid active key format.';
+                            document.getElementById('manualLoginStatus').textContent = `❌ Invalid active key format.`;
                             return;
                         }
-                        document.getElementById('manualLoginStatus').textContent = '✅ Logged in as ' + username + ' (manual key)';
+                        document.getElementById('manualLoginStatus').textContent = `✅ Logged in as ${username} (manual key)`;
                         // In a real app, store securely in session/localStorage or send to backend as needed
                     }
                     function updateTime() {
@@ -231,23 +231,23 @@ class BotWebInterface(SimpleHTTPRequestHandler):
                     setInterval(updateTime, 1000);
                     function startBot(bot) {
                         var scalping = document.getElementById('scalpingToggle').checked;
-                        logMsg('Starting ' + bot + ' bot... Scalping: ' + (scalping ? 'ENABLED' : 'DISABLED'));
+                        logMsg(`Starting ${bot} bot... Scalping: ${scalping ? 'ENABLED' : 'DISABLED'}`);
                         // Send scalping option to backend
                         fetch(`/start_bot?bot=${encodeURIComponent(bot)}&scalping=${scalping}`)
                             .then(response => response.json())
                             .then(data => {
-                                logMsg('Backend: ' + JSON.stringify(data));
+                                logMsg(`Backend: ${JSON.stringify(data)}`);
                             })
                             .catch(err => {
-                                logMsg('Backend error: ' + err);
+                                logMsg(`Backend error: ${err}`);
                             });
                     }
                     function stopBot(bot) {
-                        logMsg('Stopping ' + bot + ' bot... (API integration needed)');
+                        logMsg(`Stopping ${bot} bot... (API integration needed)`);
                     }
                     function logMsg(msg) {
                         var logArea = document.getElementById('logArea');
-                        logArea.textContent += '\n' + new Date().toLocaleTimeString() + ' - ' + msg;
+                        logArea.textContent += `\n${new Date().toLocaleTimeString()} - ${msg}`;
                         logArea.scrollTop = logArea.scrollHeight;
                     }
                     </script>
