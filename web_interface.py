@@ -33,7 +33,7 @@ class BotWebInterface(SimpleHTTPRequestHandler):
         supplied_key = self.headers.get('X-API-Key', '')
         return supplied_key == WEB_API_KEY
 
-    VERSION = "0.00000006"  # Auto-incremented on each push
+    VERSION = "0.00000007"  # Auto-incremented on each push
     def do_GET(self):
         if REQUIRE_HTTPS and not self._is_https_request():
             self._redirect_to_https()
@@ -70,30 +70,31 @@ class BotWebInterface(SimpleHTTPRequestHandler):
                         print(f"[WEB] Failed to start bot script {script_path}: {e}")
                 threading.Thread(target=run_bot_script, daemon=True).start()
                 print(f"[WEB] Launched {script_path} for bot {bot}, logging to bot_{bot.lower()}.log")
-                    # Serve bot logs: /bot_log?bot=LTC
-                    if self.path.startswith('/bot_log'):
-                        from urllib.parse import urlparse, parse_qs
-                        query = urlparse(self.path).query
-                        params = parse_qs(query)
-                        bot = params.get('bot', [''])[0]
-                        log_file = f"bot_{bot.lower()}.log"
-                        log_content = ''
-                        if os.path.exists(log_file):
-                            try:
-                                with open(log_file, 'r') as lf:
-                                    # Only return the last 40 lines for brevity
-                                    lines = lf.readlines()[-40:]
-                                    log_content = ''.join(lines)
-                            except Exception as e:
-                                log_content = f"[Error reading log file: {e}]"
-                        else:
-                            log_content = f"No log file found for {bot}."
-                        self.send_response(200)
-                        self.send_header('Content-type', 'text/plain')
-                        self._send_common_headers()
-                        self.end_headers()
-                        self.wfile.write(log_content.encode())
-                        return
+
+        # Serve bot logs: /bot_log?bot=LTC
+        if self.path.startswith('/bot_log'):
+            from urllib.parse import urlparse, parse_qs
+            query = urlparse(self.path).query
+            params = parse_qs(query)
+            bot = params.get('bot', [''])[0]
+            log_file = f"bot_{bot.lower()}.log"
+            log_content = ''
+            if os.path.exists(log_file):
+                try:
+                    with open(log_file, 'r') as lf:
+                        # Only return the last 40 lines for brevity
+                        lines = lf.readlines()[-40:]
+                        log_content = ''.join(lines)
+                except Exception as e:
+                    log_content = f"[Error reading log file: {e}]"
+            else:
+                log_content = f"No log file found for {bot}."
+            self.send_response(200)
+            self.send_header('Content-type', 'text/plain')
+            self._send_common_headers()
+            self.end_headers()
+            self.wfile.write(log_content.encode())
+            return
             else:
                 result['status'] = 'error'
                 result['error'] = f'Script not found for bot: {bot}'
