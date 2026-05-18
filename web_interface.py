@@ -33,7 +33,7 @@ class BotWebInterface(SimpleHTTPRequestHandler):
         supplied_key = self.headers.get('X-API-Key', '')
         return supplied_key == WEB_API_KEY
 
-    VERSION = "0.00000010"  # Auto-incremented on each push
+    VERSION = "0.00000011"  # Auto-incremented on each push
     def do_GET(self):
         if REQUIRE_HTTPS and not self._is_https_request():
             self._redirect_to_https()
@@ -63,13 +63,21 @@ class BotWebInterface(SimpleHTTPRequestHandler):
             result = {'status': 'started', 'bot': bot, 'scalping': scalping, 'username': username}
             if script_path and os.path.exists(script_path):
                 def run_bot_script():
+                    log_file = f"bot_{bot.lower()}.log"
                     try:
-                        log_file = f"bot_{bot.lower()}.log"
                         with open(log_file, "a") as lf:
-                            # Start the bot and redirect stdout/stderr to the log file
-                            subprocess.Popen([
-                                sys.executable, script_path, username, active_key, str(scalping)
-                            ], stdout=lf, stderr=lf)
+                            try:
+                                lf.write(f"[WEB] Attempting to launch {script_path} with username={username}, scalping={scalping}\n")
+                                lf.flush()
+                                proc = subprocess.Popen([
+                                    sys.executable, script_path, username, active_key, str(scalping)
+                                ], stdout=lf, stderr=lf)
+                                lf.write(f"[WEB] Launched process PID={proc.pid}\n")
+                                lf.flush()
+                            except Exception as sube:
+                                lf.write(f"[WEB] Subprocess error: {sube}\n")
+                                lf.flush()
+                                print(f"[WEB] Subprocess error: {sube}")
                     except Exception as e:
                         print(f"[WEB] Failed to start bot script {script_path}: {e}")
                 threading.Thread(target=run_bot_script, daemon=True).start()
