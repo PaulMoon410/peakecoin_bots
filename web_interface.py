@@ -33,7 +33,7 @@ class BotWebInterface(SimpleHTTPRequestHandler):
         supplied_key = self.headers.get('X-API-Key', '')
         return supplied_key == WEB_API_KEY
 
-    VERSION = "0.00000009"  # Auto-incremented on each push
+    VERSION = "0.00000010"  # Auto-incremented on each push
     def do_GET(self):
         if REQUIRE_HTTPS and not self._is_https_request():
             self._redirect_to_https()
@@ -58,18 +58,22 @@ class BotWebInterface(SimpleHTTPRequestHandler):
                 'BLURT': 'currency_bots/uni_blurt.py',
             }
             script_path = bot_scripts.get(bot.upper())
-            result = {'status': 'started', 'bot': bot, 'scalping': scalping}
+            username = params.get('username', [''])[0]
+            active_key = params.get('active_key', [''])[0]
+            result = {'status': 'started', 'bot': bot, 'scalping': scalping, 'username': username}
             if script_path and os.path.exists(script_path):
                 def run_bot_script():
                     try:
                         log_file = f"bot_{bot.lower()}.log"
                         with open(log_file, "a") as lf:
                             # Start the bot and redirect stdout/stderr to the log file
-                            subprocess.Popen([sys.executable, script_path], stdout=lf, stderr=lf)
+                            subprocess.Popen([
+                                sys.executable, script_path, username, active_key, str(scalping)
+                            ], stdout=lf, stderr=lf)
                     except Exception as e:
                         print(f"[WEB] Failed to start bot script {script_path}: {e}")
                 threading.Thread(target=run_bot_script, daemon=True).start()
-                print(f"[WEB] Launched {script_path} for bot {bot}, logging to bot_{bot.lower()}.log")
+                print(f"[WEB] Launched {script_path} for bot {bot}, logging to bot_{bot.lower()}.log with user {username}")
             else:
                 result = {'status': 'error', 'error': 'Invalid bot or script not found', 'bot': bot}
             self.send_response(200)
@@ -404,7 +408,13 @@ class BotWebInterface(SimpleHTTPRequestHandler):
                         var scalping = document.getElementById('scalpingToggle').checked;
                         logMsg(`Starting ${bot} bot... Scalping: ${scalping ? 'ENABLED' : 'DISABLED'}`);
                         // Send scalping option to backend
-                        fetch(`/start_bot?bot=${encodeURIComponent(bot)}&scalping=${scalping}`)
+                        var username = document.getElementById('manualUsername').value.trim();
+                        var key = document.getElementById('manualActiveKey').value.trim();
+                        if (!username || !key) {
+                            logMsg('❌ Please enter both username and active key before starting the bot.');
+                            return;
+                        }
+                        fetch(`/start_bot?bot=${encodeURIComponent(bot)}&scalping=${scalping}&username=${encodeURIComponent(username)}&active_key=${encodeURIComponent(key)}`)
                             .then(response => {
                                 const ct = response.headers.get('content-type') || '';
                                 if (ct.includes('application/json')) {

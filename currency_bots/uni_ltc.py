@@ -1,3 +1,15 @@
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) < 3:
+        print("Usage: python uni_ltc.py <username> <active_key> [scalping]")
+        sys.exit(1)
+    username = sys.argv[1]
+    active_key = sys.argv[2]
+    scalping = False
+    if len(sys.argv) > 3:
+        scalping = sys.argv[3].lower() == 'true'
+    print(f"[LTC BOT] Launched from CLI with username={username}, scalping={scalping}")
+    run_bot(username, active_key, scalping_enabled=scalping)
 
 import time
 import datetime
