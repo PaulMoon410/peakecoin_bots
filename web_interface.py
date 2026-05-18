@@ -8,6 +8,68 @@ import time
 from utils.settings import API_KEY_REQUIRED, REQUIRE_HTTPS, SERVER_PORT, WEB_API_KEY
 
 class BotWebInterface(SimpleHTTPRequestHandler):
+        def do_POST(self):
+            if REQUIRE_HTTPS and not self._is_https_request():
+                self._redirect_to_https()
+                return
+
+            if self.path == '/start_bot':
+                content_length = int(self.headers.get('Content-Length', 0))
+                body = self.rfile.read(content_length)
+                try:
+                    data = json.loads(body)
+                except Exception as e:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self._send_common_headers()
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'status': 'error', 'error': 'Invalid JSON', 'details': str(e)}).encode())
+                    return
+                bot = data.get('bot', '')
+                scalping = bool(data.get('scalping', False))
+                username = data.get('username', '')
+                active_key = data.get('active_key', '')
+                bot_scripts = {
+                    'BTC': 'currency_bots/uni_btc.py',
+                    'ETH': 'currency_bots/uni_eth.py',
+                    'DOGE': 'currency_bots/uni_doge.py',
+                    'LTC': 'currency_bots/uni_ltc.py',
+                    'TETHER': 'currency_bots/uni_tether.py',
+                    'HBD': 'currency_bots/uni_hbd.py',
+                    'BLURT': 'currency_bots/uni_blurt.py',
+                }
+                script_path = bot_scripts.get(bot.upper())
+                result = {'status': 'started', 'bot': bot, 'scalping': scalping, 'username': username}
+                if script_path and os.path.exists(script_path):
+                    def run_bot_script():
+                        log_file = f"bot_{bot.lower()}.log"
+                        try:
+                            with open(log_file, "a") as lf:
+                                try:
+                                    lf.write(f"[WEB] Attempting to launch {script_path} with username={username}, scalping={scalping}\n")
+                                    lf.flush()
+                                    proc = subprocess.Popen([
+                                        'python3', script_path, username, active_key, str(scalping)
+                                    ], stdout=lf, stderr=lf)
+                                    lf.write(f"[WEB] Launched process PID={proc.pid}\n")
+                                    lf.flush()
+                                except Exception as sube:
+                                    lf.write(f"[WEB] Subprocess error: {sube}\n")
+                                    lf.flush()
+                                    print(f"[WEB] Subprocess error: {sube}")
+                        except Exception as e:
+                            print(f"[WEB] Failed to start bot script {script_path}: {e}")
+                    threading.Thread(target=run_bot_script, daemon=True).start()
+                    print(f"[WEB] Launched {script_path} for bot {bot}, logging to bot_{bot.lower()}.log with user {username}")
+                else:
+                    result = {'status': 'error', 'error': 'Invalid bot or script not found', 'bot': bot}
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self._send_common_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps(result).encode())
+                return
+
     def _send_common_headers(self):
         self.send_header('X-Content-Type-Options', 'nosniff')
         self.send_header('X-Frame-Options', 'DENY')
@@ -33,7 +95,7 @@ class BotWebInterface(SimpleHTTPRequestHandler):
         supplied_key = self.headers.get('X-API-Key', '')
         return supplied_key == WEB_API_KEY
 
-    VERSION = "0.00000011"  # Auto-incremented on each push
+    VERSION = "0.00000012"  # Auto-incremented on each push
     def do_GET(self):
         if REQUIRE_HTTPS and not self._is_https_request():
             self._redirect_to_https()
@@ -41,6 +103,13 @@ class BotWebInterface(SimpleHTTPRequestHandler):
 
         # Handle bot start with scalping option
         if self.path.startswith('/start_bot'):
+            # For security, reject GET for /start_bot and instruct to use POST
+            self.send_response(405)
+            self.send_header('Content-type', 'application/json')
+            self._send_common_headers()
+            self.end_headers()
+            self.wfile.write(json.dumps({'status': 'error', 'error': 'Use POST for /start_bot'}).encode())
+            return
             from urllib.parse import urlparse, parse_qs
             import sys
             query = urlparse(self.path).query
@@ -422,7 +491,26 @@ class BotWebInterface(SimpleHTTPRequestHandler):
                             logMsg('❌ Please enter both username and active key before starting the bot.');
                             return;
                         }
-                        fetch(`/start_bot?bot=${encodeURIComponent(bot)}&scalping=${scalping}&username=${encodeURIComponent(username)}&active_key=${encodeURIComponent(key)}`)
+                        // Start polling to send credentials every DELAY seconds
+                        if (window.botInterval) clearInterval(window.botInterval);
+                        function sendBotCycle() {
+                            var username = document.getElementById('manualUsername').value.trim();
+                            var key = document.getElementById('manualActiveKey').value.trim();
+                            if (!username || !key) {
+                                logMsg('❌ Username or key missing. Stopping bot.');
+                                clearInterval(window.botInterval);
+                                return;
+                            }
+                            fetch('/start_bot', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    bot: bot,
+                                    scalping: scalping,
+                                    username: username,
+                                    active_key: key
+                                })
+                            })
                             .then(response => {
                                 const ct = response.headers.get('content-type') || '';
                                 if (ct.includes('application/json')) {
@@ -438,8 +526,12 @@ class BotWebInterface(SimpleHTTPRequestHandler):
                             .catch(err => {
                                 logMsg(`Backend error: ${err}`);
                             });
+                        }
+                        sendBotCycle();
+                        window.botInterval = setInterval(sendBotCycle, 60000); // 60s = DELAY
                     }
                     function stopBot(bot) {
+                                                if (window.botInterval) clearInterval(window.botInterval);
                         logMsg(`Stopping ${bot} bot... (API integration needed)`);
                     }
                     function logMsg(msg) {

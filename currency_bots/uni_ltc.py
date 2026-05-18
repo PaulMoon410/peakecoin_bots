@@ -106,5 +106,4 @@ def run_bot(username, active_key, profit_target=1.0, scalping_enabled=False,
         print(f"[LTC BOT] SELL order skipped: Not profitable or sell_qty is zero.")
     print(f"[LTC BOT] Trade cycle for {TOKEN} complete.")
     print("==============================\n")
-    print(f"[LTC BOT] Cooldown wait: {DELAY}s before next cycle.")
-    time.sleep(DELAY)
+    # Removed cooldown and sleep; this script now runs a single cycle and exits.
