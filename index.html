@@ -127,6 +127,13 @@
         <div class="footer">
             &copy; 2025 PeakeCoin Trading Bot &middot; <a href="https://www.geocities.ws/peakecoin/" style="color:#38bdf8;">peakecoin</a>
         </div>
+        <div style="margin-top:2em;padding:1em;background:#0ea5e9;color:#fff;border-radius:10px;font-size:1em;">
+            <b>Security Notice:</b> For maximum safety, run bots locally on your own device. If you use the web dashboard, your key is only used in memory to start the bot and is never stored on the server.
+        </div>
     </div>
+    <script>
+    // Ping backend to wake up Render server and backend bots
+    fetch('/').then(()=>{}).catch(()=>{});
+    </script>
 </body>
 </html>

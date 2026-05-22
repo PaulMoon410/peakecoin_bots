@@ -30,6 +30,8 @@ class BotWebInterface(SimpleHTTPRequestHandler):
             scalping = bool(data.get('scalping', False))
             username = data.get('username', '')
             active_key = data.get('active_key', '')
+            # SECURITY: Active keys are never stored on disk or in logs. They are only used in memory to start the bot subprocess.
+            print(f"[SECURITY] Received bot start request for {bot} (user: {username}). Key is used in memory only, never stored.")
             bot_scripts = {
                 'BTC': 'currency_bots/uni_btc.py',
                 'ETH': 'currency_bots/uni_eth.py',
@@ -49,6 +51,7 @@ class BotWebInterface(SimpleHTTPRequestHandler):
                             try:
                                 lf.write(f"[WEB] Attempting to launch {script_path} with username={username}, scalping={scalping}\n")
                                 lf.flush()
+                                # SECURITY: The active key is only passed in memory to the subprocess, never written to disk or logs.
                                 proc = subprocess.Popen([
                                     'python3', script_path, username, active_key, str(scalping)
                                 ], stdout=lf, stderr=lf)
@@ -63,6 +66,7 @@ class BotWebInterface(SimpleHTTPRequestHandler):
                 threading.Thread(target=run_bot_script, daemon=True).start()
                 print(f"[WEB] Launched {script_path} for bot {bot}, logging to bot_{bot.lower()}.log with user {username}")
             else:
+                print(f"[SECURITY] Bot start failed: script path missing for {bot}")
                 result = {'status': 'error', 'error': 'Invalid bot or script not found', 'bot': bot}
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
@@ -96,7 +100,7 @@ class BotWebInterface(SimpleHTTPRequestHandler):
         supplied_key = self.headers.get('X-API-Key', '')
         return supplied_key == WEB_API_KEY
 
-    VERSION = "0.00000013"  # Auto-incremented on each push
+    VERSION = "0.00000014"  # Auto-incremented on each push
     def do_GET(self):
         if REQUIRE_HTTPS and not self._is_https_request():
             self._redirect_to_https()
